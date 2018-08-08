@@ -86,7 +86,37 @@ class View(object):
                 exit()
 
             else:
-                print("oi")
+                results = {
+                    'Source Address': df['Source address'],
+                    'Destination Address': df['Destination address'],
+                    'Source Zone': df['Source Zone'],
+                    'Destination Zone': df['Destination Zone'],
+                    'Destination Port': df['Destination Port'],
+                    'Threat/Content Name': df['Threat/Content Name'],
+                    'Severity': df['Severity'],
+                    'thr_category': df['thr_category'],
+                    'Destination User': df['Destination User'],
+                    'Source User': df['Source User'],
+                    'Rule': df['Rule'],
+                    'Receive Time': df['Receive Time'],
+                    'Generate Time': df['Generate Time'],
+                    'Application': df['Application'],
+                    'Direction': df['Direction'],
+                    'Session ID': df['Session ID'],
+                    'Repeat Count': df['Repeat Count']
+                }
+
+                arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/Novos/ameacaCSV.csv'
+                stringP = pd.DataFrame(results, columns=['Source Address', 'Destination Address', 'Source Zone',
+                                                         'Destination Zone',
+                                                         'Destination Port', 'Threat/Content Name', 'Severity',
+                                                         'thr_category',
+                                                         'Destination User', 'SourceUser', 'Rule', 'Receive Time',
+                                                         'Generate Time',
+                                                         'Application', 'Direction', 'Session ID', 'Repeat Count'])
+
+                stringP.to_csv(arquivoOutput)
+                exit()
 
     def About(self):
         print("This is a simple example of a menu")
