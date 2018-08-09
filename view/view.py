@@ -57,6 +57,8 @@ class View(object):
             if(df['Type'][0] == "THREAT"):
 
                 results = {
+                    'Receive Time': df['Receive Time'],
+                    'Generate Time': df['Generate Time'],
                     'Source Address': df['Source address'],
                      'Destination Address': df['Destination address'],
                      'Source Zone': df['Source Zone'],
@@ -68,8 +70,6 @@ class View(object):
                      'Destination User': df['Destination User'],
                      'Source User': df['Source User'],
                      'Rule': df['Rule'],
-                     'Receive Time': df['Receive Time'],
-                     'Generate Time': df['Generate Time'],
                      'Application': df['Application'],
                      'Direction': df['Direction'],
                      'Session ID': df['Session ID'],
@@ -77,46 +77,43 @@ class View(object):
                 }
 
                 arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/Novos/ameacaCSV.csv'
-                stringP = pd.DataFrame(results, columns = ['Source Address', 'Destination Address', 'Source Zone', 'Destination Zone',
-                                         'Destination Port', 'Threat/Content Name', 'Severity', 'thr_category',
-                                         'Destination User', 'SourceUser', 'Rule', 'Receive Time', 'Generate Time',
-                                         'Application', 'Direction', 'Session ID', 'Repeat Count'])
+                stringP = pd.DataFrame(results, columns = ['Receive Time', 'Generate Time','Source Address', 'Destination Address',
+                                        'Source Zone', 'Destination Zone', 'Destination Port', 'Threat/Content Name', 'Severity',
+                                        'thr_category', 'Destination User', 'SourceUser', 'Rule', 'Application', 'Direction',
+                                        'Session ID', 'Repeat Count'])
 
                 stringP.to_csv(arquivoOutput)
-                exit()
-
             else:
                 results = {
+                    'Receive Time': df['Receive Time'],
+                    'Generate Time': df['Generate Time'],
                     'Source Address': df['Source address'],
                     'Destination Address': df['Destination address'],
                     'Source Zone': df['Source Zone'],
                     'Destination Zone': df['Destination Zone'],
                     'Destination Port': df['Destination Port'],
-                    'Threat/Content Name': df['Threat/Content Name'],
-                    'Severity': df['Severity'],
-                    'thr_category': df['thr_category'],
                     'Destination User': df['Destination User'],
                     'Source User': df['Source User'],
                     'Rule': df['Rule'],
-                    'Receive Time': df['Receive Time'],
-                    'Generate Time': df['Generate Time'],
+                    'Threat/Content Type': df['Threat/Content Type'],
+                    'session_end_reason': df['session_end_reason'],
                     'Application': df['Application'],
-                    'Direction': df['Direction'],
                     'Session ID': df['Session ID'],
-                    'Repeat Count': df['Repeat Count']
+                    'Repeat Count': df['Repeat Count'],
+                    'Action': df['Action'],
+                    'IP Protocol': df['IP Protocol'],
+                    'action_source': df['action_source'],
+                    'pkts_received': df['pkts_received'],
+                    'pkts_sent': df['pkts_sent']
                 }
 
-                arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/Novos/ameacaCSV.csv'
-                stringP = pd.DataFrame(results, columns=['Source Address', 'Destination Address', 'Source Zone',
-                                                         'Destination Zone',
-                                                         'Destination Port', 'Threat/Content Name', 'Severity',
-                                                         'thr_category',
-                                                         'Destination User', 'SourceUser', 'Rule', 'Receive Time',
-                                                         'Generate Time',
-                                                         'Application', 'Direction', 'Session ID', 'Repeat Count'])
+                arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Tráfego/Novos/trafegoCSV.csv'
+                stringP = pd.DataFrame(results, columns=['Receive Time', 'Generate Time','Source Address', 'Destination Address', 'Source Zone',
+                                                        'Destination Zone','Destination Port', 'Destination User', 'Source User', 'Rule',
+                                                        'Threat/Content Type','session_end_reason', 'Application', 'Session ID','Repeat Count',
+                                                        'Action', 'IP Protocol', 'action_source', 'pkts_received', 'pkts_sent'])
 
                 stringP.to_csv(arquivoOutput)
-                exit()
 
     def About(self):
         print("This is a simple example of a menu")
