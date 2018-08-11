@@ -2,10 +2,7 @@ from tkinter import filedialog
 from tkinter import *
 import tkinter as tk
 import pandas as pd
-import csv
-from pandas.io.json import json
-
-from json import *
+from sklearn import preprocessing
 
 class View(object):
 
@@ -79,10 +76,12 @@ class View(object):
                 arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/Novos/ameacaCSV.csv'
                 stringP = pd.DataFrame(results, columns = ['Receive Time', 'Generate Time','Source Address', 'Destination Address',
                                         'Source Zone', 'Destination Zone', 'Destination Port', 'Threat/Content Name', 'Severity',
-                                        'thr_category', 'Destination User', 'SourceUser', 'Rule', 'Application', 'Direction',
+                                        'thr_category', 'Destination User', 'Source User', 'Rule', 'Application', 'Direction',
                                         'Session ID', 'Repeat Count'])
 
                 stringP.to_csv(arquivoOutput)
+                self.padronizarDados(stringP, 'ameaca')
+
             else:
                 results = {
                     'Receive Time': df['Receive Time'],
@@ -114,9 +113,23 @@ class View(object):
                                                         'Action', 'IP Protocol', 'action_source', 'pkts_received', 'pkts_sent'])
 
                 stringP.to_csv(arquivoOutput)
+                self.padronizarDados(stringP, 'trafego')
 
     def About(self):
         print("This is a simple example of a menu")
+
+    def padronizarDados(self, file, tipo):
+        if tipo == 'ameaca':
+            dadosNaoRotulados = file[['Destination Port', 'Session ID', 'Repeat Count']]
+            scaler = preprocessing.StandardScaler()
+            scaler.fit(dadosNaoRotulados)
+            scaler.transform(dadosNaoRotulados)
+
+        else:
+            dadosNaoRotulados = file[['Destination Port', 'Session ID', 'Repeat Count', 'pkts_received', 'pkts_sent']]
+            scaler = preprocessing.StandardScaler()
+            scaler.fit(dadosNaoRotulados)
+            scaler.transform(dadosNaoRotulados)
 
 
 root = Tk()
