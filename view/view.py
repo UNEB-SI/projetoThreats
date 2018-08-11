@@ -3,6 +3,8 @@ from tkinter import *
 import tkinter as tk
 import pandas as pd
 from sklearn import preprocessing
+from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
 
 class View(object):
 
@@ -118,18 +120,57 @@ class View(object):
     def About(self):
         print("This is a simple example of a menu")
 
+    def metodoElbow(self, x):
+        wcss = []
+        for i in range(1, 11):
+            kmeans = KMeans(n_clusters=i, init='random')
+            kmeans.fit(x)
+            print(i, kmeans.inertia_)
+            wcss.append(kmeans.inertia_)
+
+
+        plt.plot(range(1, 11), wcss)
+        plt.title('O Metodo Elbow')
+        plt.xlabel('Numero de Clusters')
+        plt.ylabel('WSS')  # within cluster sum of squares
+        plt.show()
+
     def padronizarDados(self, file, tipo):
         if tipo == 'ameaca':
             dadosNaoRotulados = file[['Destination Port', 'Session ID', 'Repeat Count']]
             scaler = preprocessing.StandardScaler()
             scaler.fit(dadosNaoRotulados)
-            scaler.transform(dadosNaoRotulados)
+            dadosTransformados = scaler.transform(dadosNaoRotulados)
+
+            '''self.metodoElbow(dadosTranformados)'''
+            kmeans = KMeans(n_clusters=4, init='random')
+            kmeans.fit(dadosTransformados)
+            plt.scatter(dadosTransformados[:, 0], dadosTransformados[:, 1], s=100, c=kmeans.labels_)
+            plt.scatter(kmeans.cluster_centers_[:, 0], kmeans.cluster_centers_[:, 1], s=300, c='red', label='Centroids')
+            plt.title('Tráfego Clusters and Centroids')
+            plt.xlabel('SepalLength')
+            plt.ylabel('SepalWidth')
+            plt.legend()
+            plt.show()
+
 
         else:
             dadosNaoRotulados = file[['Destination Port', 'Session ID', 'Repeat Count', 'pkts_received', 'pkts_sent']]
             scaler = preprocessing.StandardScaler()
             scaler.fit(dadosNaoRotulados)
-            scaler.transform(dadosNaoRotulados)
+            dadosTransformados = scaler.transform(dadosNaoRotulados)
+
+            #self.metodoElbow(dadosTranformados)
+            kmeans = KMeans(n_clusters=5, init='random')
+            kmeans.fit(dadosTransformados)
+            plt.scatter(dadosTransformados[:, 0], dadosTransformados[:, 1], s=100, c=kmeans.labels_)
+            plt.scatter(kmeans.cluster_centers_[:, 0], kmeans.cluster_centers_[:, 1], s=300, c='red', label='Centroids')
+            plt.title('Tráfego Clusters and Centroids')
+            plt.xlabel('SepalLength')
+            plt.ylabel('SepalWidth')
+            plt.legend()
+            plt.show()
+
 
 
 root = Tk()
