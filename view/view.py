@@ -135,6 +135,23 @@ class View(object):
         plt.ylabel('WSS')  # within cluster sum of squares
         plt.show()
 
+    def encontrarSimilaridade(self, k, dadosTransformados, tipo):
+        if tipo == 'ameaca':
+            kmeans = KMeans(n_clusters=k, init='random')
+            title = 'Threat'
+        else:
+            kmeans = KMeans(n_clusters=k, init='random')
+            title = 'Traffic'
+
+        kmeans.fit(dadosTransformados)
+        plt.scatter(dadosTransformados[:, 0], dadosTransformados[:, 1], s=100, c=kmeans.labels_)
+        plt.scatter(kmeans.cluster_centers_[:, 0], kmeans.cluster_centers_[:, 1], s=300, c='red', label='Centroids')
+        plt.title(title + ' Clusters and Centroids')
+        plt.xlabel('SepalLength')
+        plt.ylabel('SepalWidth')
+        plt.legend()
+        plt.show()
+
     def padronizarDados(self, file, tipo):
         if tipo == 'ameaca':
             dadosNaoRotulados = file[['Destination Port', 'Session ID', 'Repeat Count']]
@@ -143,17 +160,8 @@ class View(object):
             dadosTransformados = scaler.transform(dadosNaoRotulados)
 
             '''self.metodoElbow(dadosTranformados)'''
-            kmeans = KMeans(n_clusters=4, init='random')
-            kmeans.fit(dadosTransformados)
-            plt.scatter(dadosTransformados[:, 0], dadosTransformados[:, 1], s=100, c=kmeans.labels_)
-            plt.scatter(kmeans.cluster_centers_[:, 0], kmeans.cluster_centers_[:, 1], s=300, c='red', label='Centroids')
-            plt.title('Tráfego Clusters and Centroids')
-            plt.xlabel('SepalLength')
-            plt.ylabel('SepalWidth')
-            plt.legend()
-            plt.show()
-
-
+            k = 4
+            self.encontrarSimilaridade(k,dadosTransformados, 'ameaca')
         else:
             dadosNaoRotulados = file[['Destination Port', 'Session ID', 'Repeat Count', 'pkts_received', 'pkts_sent']]
             scaler = preprocessing.StandardScaler()
@@ -161,20 +169,10 @@ class View(object):
             dadosTransformados = scaler.transform(dadosNaoRotulados)
 
             #self.metodoElbow(dadosTranformados)
-            kmeans = KMeans(n_clusters=5, init='random')
-            kmeans.fit(dadosTransformados)
-            plt.scatter(dadosTransformados[:, 0], dadosTransformados[:, 1], s=100, c=kmeans.labels_)
-            plt.scatter(kmeans.cluster_centers_[:, 0], kmeans.cluster_centers_[:, 1], s=300, c='red', label='Centroids')
-            plt.title('Tráfego Clusters and Centroids')
-            plt.xlabel('SepalLength')
-            plt.ylabel('SepalWidth')
-            plt.legend()
-            plt.show()
-
-
+            k = 4
+            self.encontrarSimilaridade(k, dadosTransformados, 'trafego')
 
 root = Tk()
 View(root)
 
 root.mainloop()
-
