@@ -4,6 +4,8 @@ import tkinter as tk
 import pandas as pd
 from sklearn import preprocessing
 from sklearn.cluster import KMeans
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 
 class View(object):
@@ -120,16 +122,21 @@ class View(object):
     def About(self):
         print("This is a simple example of a menu")
 
+    def classificador(self, file, tipo):
+        if tipo == 'ameaca':
+           x_train, x_test, y_train, y_test = train_test_split(file.data, file.target)
+        else:
+            print('oi')
+
     def metodoElbow(self, x):
         wcss = []
-        for i in range(1, 11):
+        for i in range(1, 30):
             kmeans = KMeans(n_clusters=i, init='random')
             kmeans.fit(x)
             print(i, kmeans.inertia_)
             wcss.append(kmeans.inertia_)
 
-
-        plt.plot(range(1, 11), wcss)
+        plt.plot(range(1, 30), wcss)
         plt.title('O Metodo Elbow')
         plt.xlabel('Numero de Clusters')
         plt.ylabel('WSS')  # within cluster sum of squares
@@ -144,6 +151,21 @@ class View(object):
             title = 'Traffic'
 
         kmeans.fit(dadosTransformados)
+        labels = kmeans.predict(dadosTransformados)
+        clusters = {}
+        n = 0
+        for item in labels:
+            if item in clusters:
+                clusters[item].append(dadosTransformados[n])
+            else:
+                clusters[item] = [dadosTransformados[n]]
+            n += 1
+
+        for item in clusters:
+            print("Cluster ", item)
+            for i in clusters[item]:
+                print(i)
+
         plt.scatter(dadosTransformados[:, 0], dadosTransformados[:, 1], s=100, c=kmeans.labels_)
         plt.scatter(kmeans.cluster_centers_[:, 0], kmeans.cluster_centers_[:, 1], s=300, c='red', label='Centroids')
         plt.title(title + ' Clusters and Centroids')
@@ -159,8 +181,8 @@ class View(object):
             scaler.fit(dadosNaoRotulados)
             dadosTransformados = scaler.transform(dadosNaoRotulados)
 
-            '''self.metodoElbow(dadosTranformados)'''
-            k = 4
+            ''' self.metodoElbow(dadosTransformados)'''
+            k = 6
             self.encontrarSimilaridade(k,dadosTransformados, 'ameaca')
         else:
             dadosNaoRotulados = file[['Destination Port', 'Session ID', 'Repeat Count', 'pkts_received', 'pkts_sent']]
@@ -169,8 +191,8 @@ class View(object):
             dadosTransformados = scaler.transform(dadosNaoRotulados)
 
             #self.metodoElbow(dadosTranformados)
-            k = 4
-            self.encontrarSimilaridade(k, dadosTransformados, 'trafego')
+            '''k = 4
+            self.encontrarSimilaridade(k, dadosTransformados, 'trafego')'''
 
 root = Tk()
 View(root)
