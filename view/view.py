@@ -7,6 +7,9 @@ from sklearn.cluster import KMeans
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
+import numpy as np
+from sklearn import feature_selection
+
 
 class View(object):
 
@@ -54,8 +57,18 @@ class View(object):
         nomeArquivo = filedialog.askopenfilename(initialdir="", title="Select file", filetypes=[("all files", ".*")])
         with open(nomeArquivo, 'r', encoding='utf-8') as arquivo:
             df = pd.read_csv(arquivo)
+            count = df['Destination User'].count()
 
             if(df['Type'][0] == "THREAT"):
+                for i in range(count):
+                    destino =df['Destination User'][i]
+                    origem =df['Source User'][i]
+
+                    if type(destino) == float:
+                        df.loc[i, 'Destination User'] = 'Local User'
+
+                    if type(origem) == float:
+                        df.loc[i, 'Source User'] = 'Local User'
 
                 results = {
                     'Receive Time': df['Receive Time'],
@@ -123,8 +136,24 @@ class View(object):
         print("This is a simple example of a menu")
 
     def classificador(self, file, tipo):
+        print(file)
+        exit()
         if tipo == 'ameaca':
-           x_train, x_test, y_train, y_test = train_test_split(file.data, file.target)
+            classes = pd.DataFrame([file],
+                                   columns=['Receive Time', 'Generate Time', 'Source Address', 'Destination Address',
+                                            'Source Zone', 'Destination Zone', 'Destination Port','Threat/Content Name',
+                                            'Severity','thr_category', 'Destination User','Source User', 'Rule', 'Application',
+                                            'Direction','Session ID', 'Repeat Count'])
+            print(classes)
+            exit()
+            fs = feature_selection.SelectPercentile(feature_selection.f_classif, percentile=50)
+            X_treino_fs = fs.fit_transform(file, classes)
+            x_train, x_test, y_train, y_test = train_test_split(file.data, file.target, stratify=file.target, random_state=42)
+            tree = DecisionTreeClassifier(random_state=0)
+            tree.fit(x_train, y_train)
+
+            print('Acurácia do subconjunto treinado: {:.3f}'.format(tree.score(x_train, y_train)))
+            print('Acurácia do subconjunto testado: {:.3f}'.format(tree.score(x_test, y_test)))
         else:
             print('oi')
 
@@ -142,7 +171,7 @@ class View(object):
         plt.ylabel('WSS')  # within cluster sum of squares
         plt.show()
 
-    def encontrarSimilaridade(self, k, dadosTransformados, tipo):
+    def encontrarSimilaridade(self, k, dadosTransformados, tipo, file):
         if tipo == 'ameaca':
             kmeans = KMeans(n_clusters=k, init='random')
             title = 'Threat'
@@ -161,10 +190,12 @@ class View(object):
                 clusters[item] = [dadosTransformados[n]]
             n += 1
 
-        for item in clusters:
+        '''for item in clusters:
             print("Cluster ", item)
             for i in clusters[item]:
-                print(i)
+                print(i)'''
+
+        self.classificador(file, 'ameaca')
 
         plt.scatter(dadosTransformados[:, 0], dadosTransformados[:, 1], s=100, c=kmeans.labels_)
         plt.scatter(kmeans.cluster_centers_[:, 0], kmeans.cluster_centers_[:, 1], s=300, c='red', label='Centroids')
@@ -183,7 +214,7 @@ class View(object):
 
             ''' self.metodoElbow(dadosTransformados)'''
             k = 6
-            self.encontrarSimilaridade(k,dadosTransformados, 'ameaca')
+            self.encontrarSimilaridade(k,dadosTransformados, 'ameaca', file)
         else:
             dadosNaoRotulados = file[['Destination Port', 'Session ID', 'Repeat Count', 'pkts_received', 'pkts_sent']]
             scaler = preprocessing.StandardScaler()
