@@ -4,11 +4,13 @@ import tkinter as tk
 import pandas as pd
 from sklearn import preprocessing
 from sklearn.cluster import KMeans
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.model_selection import train_test_split
+from sklearn import tree
 import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
 import numpy as np
-from sklearn import feature_selection
+from matplotlib.colors import ListedColormap
+from sklearn.tree import export_graphviz
 
 
 class View(object):
@@ -26,8 +28,6 @@ class View(object):
     def menu(self):
 
         menu = tk.Menu(self.root)
-
-
         #filemenu = Menu(menu)
         filemenu = tk.Menu(menu, tearoff=0)
         #filemenu.add_command(label="Sair", command=self.root.quit)
@@ -135,27 +135,71 @@ class View(object):
     def About(self):
         print("This is a simple example of a menu")
 
-    def classificador(self, file, tipo):
-        print(file)
-        exit()
-        if tipo == 'ameaca':
-            classes = pd.DataFrame([file],
-                                   columns=['Receive Time', 'Generate Time', 'Source Address', 'Destination Address',
-                                            'Source Zone', 'Destination Zone', 'Destination Port','Threat/Content Name',
-                                            'Severity','thr_category', 'Destination User','Source User', 'Rule', 'Application',
-                                            'Direction','Session ID', 'Repeat Count'])
-            print(classes)
-            exit()
-            fs = feature_selection.SelectPercentile(feature_selection.f_classif, percentile=50)
-            X_treino_fs = fs.fit_transform(file, classes)
-            x_train, x_test, y_train, y_test = train_test_split(file.data, file.target, stratify=file.target, random_state=42)
-            tree = DecisionTreeClassifier(random_state=0)
-            tree.fit(x_train, y_train)
+    def plot_decision_regions(self,X, y, classifier, test_idx=None, resolution=0.02):
+        # setup marker generator and color map
+        markers = ('s', 'x', 'o', '^', 'v')
+        colors = ('red', 'blue', 'lightgreen', 'gray', 'cyan')
+        cmap = ListedColormap(colors[:len(np.unique(y))])
 
-            print('Acurácia do subconjunto treinado: {:.3f}'.format(tree.score(x_train, y_train)))
-            print('Acurácia do subconjunto testado: {:.3f}'.format(tree.score(x_test, y_test)))
+        # plot the decision surface
+        x1_min, x1_max = X[:, 0].min() - 1, X[:, 0].max() + 1
+        x2_min, x2_max = X[:, 1].min() - 1, X[:, 1].max() + 1
+        xx1, xx2 = np.meshgrid(np.arange(x1_min, x1_max, resolution),
+                               np.arange(x2_min, x2_max, resolution))
+        Z = classifier.predict(np.array([xx1.ravel(), xx2.ravel()]).T)
+        Z = Z.reshape(xx1.shape)
+        plt.contourf(xx1, xx2, Z, alpha=0.4, cmap=cmap)
+        plt.xlim(xx1.min(), xx1.max())
+        plt.ylim(xx2.min(), xx2.max())
+
+        # plot all samples
+        X_test, y_test = X[test_idx, :], y[test_idx]
+        for idx, cl in enumerate(np.unique(y)):
+            plt.scatter(x=X[y == cl, 0], y=X[y == cl, 1],
+                        alpha=0.8, c=cmap(idx),
+                        marker=markers[idx], label=cl)
+        # highlight test samples
+        if test_idx:
+            X_test, y_test = X[test_idx, :], y[test_idx]
+            plt.scatter(X_test[:, 0], X_test[:, 1], c='',
+                        alpha=1.0, linewidth=1, marker='o',
+                        s=55, label='test set')
+
+
+    def classificador(self, file, tipo):
+
+        if tipo == 'ameaca':
+            X = file[:, [2, 3]]
+            y = file.columns
+
+            print(X)
+            exit()
+
         else:
-            print('oi')
+            X = file[:, [2, 3]]
+            y = file.columns
+
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
+        tree = DecisionTreeClassifier(criterion='entropy',
+                                      max_depth=3, random_state=0)
+        tree.fit(X_train, y_train)
+
+        X_combined = np.vstack((X_train, X_test))
+        y_combined = np.hstack((y_train, y_test))
+
+        self.plot_decision_regions(X_combined, y_combined,
+                              classifier=tree, test_idx=range(105, 150))
+
+        plt.xlabel('petal length [cm]')
+        plt.ylabel('petal width [cm]')
+        plt.legend(loc='upper left')
+        plt.show()
+
+        export_graphviz(tree,
+                        out_file='tree.dot',
+                        feature_names=['petal length', 'petal width'])
+
+
 
     def metodoElbow(self, x):
         wcss = []
