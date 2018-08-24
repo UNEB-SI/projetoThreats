@@ -1,16 +1,19 @@
 from tkinter import filedialog
 from tkinter import *
 import tkinter as tk
+
+import graphviz as graphviz
 import pandas as pd
 from sklearn import preprocessing
 from sklearn.cluster import KMeans
 from sklearn import tree
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeClassifier
+from sklearn import tree
 import numpy as np
 from matplotlib.colors import ListedColormap
 from sklearn.tree import export_graphviz
+import graphviz
 
 
 class View(object):
@@ -168,38 +171,51 @@ class View(object):
 
     def classificador(self, file, tipo):
 
-        if tipo == 'ameaca':
-            X = file.iloc[:, [2, 3]]
+        if tipo == 'ameaca': #pode trabalhar somente com os dados categóricos de cada tipo de arquivo
+            le = preprocessing.LabelEncoder()
+            file = file.apply(le.fit_transform)
+            X = file.values
             y = file.columns
+            X = X.transpose()
 
         else:
-            X = file.iloc[:, [2, 3]]
+            X = file.iloc[:, :]
             y = file.columns
+            X.shape
+            X = X.transpose()
+
 
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
-        tree = DecisionTreeClassifier(criterion='entropy',
-                                      max_depth=3, random_state=0)
-
-        print(tree)
-        exit()
+        tree.DecisionTreeClassifier(criterion='entropy', max_depth=5, random_state=0)
         tree.fit(X_train, y_train)
+        prev = tree.predict(X_test)
+
+        dot_data = tree.export_graphviz(prev, out_file=None,
+                                        feature_names=file.values,
+                                        class_names=file.columns,
+                                        filled=True, rounded=True,
+                                        special_characters=True)
+        graph = graphviz.Source(dot_data)
+        graph.render("file", view=True)
+
+
+        #print(graph)
+        exit()
+
+        #prev = tree.predict(X_test)
+
 
         X_combined = np.vstack((X_train, X_test))
         y_combined = np.hstack((y_train, y_test))
 
-
-
-        self.plot_decision_regions(X_combined, y_combined,
-                              classifier=tree, test_idx=range(105, 150))
+        self.plot_decision_regions(X_combined, y_combined, classifier=tree, test_idx=range(105, 150))
 
         plt.xlabel('petal length [cm]')
         plt.ylabel('petal width [cm]')
         plt.legend(loc='upper left')
         plt.show()
 
-        export_graphviz(tree,
-                        out_file='tree.dot',
-                        feature_names=['petal length', 'petal width'])
+        export_graphviz(tree, out_file='tree.dot', feature_names=['petal length', 'petal width'])
 
 
 
