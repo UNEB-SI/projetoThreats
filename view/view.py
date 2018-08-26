@@ -1,15 +1,15 @@
 from tkinter import filedialog
 from tkinter import *
 import tkinter as tk
-
-import graphviz as graphviz
 import pandas as pd
 from sklearn import preprocessing
 from sklearn.cluster import KMeans
+from sklearn.ensemble import ExtraTreesClassifier
+from sklearn.preprocessing import LabelEncoder
+from sklearn.tree import DecisionTreeClassifier
 from sklearn import tree
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
-from sklearn import tree
 import numpy as np
 from matplotlib.colors import ListedColormap
 from sklearn.tree import export_graphviz
@@ -147,13 +147,16 @@ class View(object):
         # plot the decision surface
         x1_min, x1_max = X[:, 0].min() - 1, X[:, 0].max() + 1
         x2_min, x2_max = X[:, 1].min() - 1, X[:, 1].max() + 1
+
         xx1, xx2 = np.meshgrid(np.arange(x1_min, x1_max, resolution),
-                               np.arange(x2_min, x2_max, resolution))
+                               np.arange(x2_min, x2_max, resolution), copy=False)
+
         Z = classifier.predict(np.array([xx1.ravel(), xx2.ravel()]).T)
         Z = Z.reshape(xx1.shape)
         plt.contourf(xx1, xx2, Z, alpha=0.4, cmap=cmap)
         plt.xlim(xx1.min(), xx1.max())
         plt.ylim(xx2.min(), xx2.max())
+
 
         # plot all samples
         X_test, y_test = X[test_idx, :], y[test_idx]
@@ -186,36 +189,35 @@ class View(object):
 
 
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
-        tree.DecisionTreeClassifier(criterion='entropy', max_depth=5, random_state=0)
-        tree.fit(X_train, y_train)
-        prev = tree.predict(X_test)
+        result = DecisionTreeClassifier(criterion='gini', max_depth=3, random_state=0)
+        result.fit(X_train, y_train)
+        '''result.predict(X_train)'''
 
-        dot_data = tree.export_graphviz(prev, out_file=None,
-                                        feature_names=file.values,
-                                        class_names=file.columns,
-                                        filled=True, rounded=True,
-                                        special_characters=True)
+        dot_data = tree.export_graphviz(result, out_file=None,
+                                feature_names=file.values,
+                                class_names=file.columns,
+                                filled=True, rounded=True,
+                                special_characters=True)
         graph = graphviz.Source(dot_data)
         graph.render("file", view=True)
 
-
-        #print(graph)
-        exit()
-
-        #prev = tree.predict(X_test)
+        #result.predict(X_test)
 
 
-        X_combined = np.vstack((X_train, X_test))
+        #prev = tree.predict(X_test)'''
+
+
+        '''X_combined = np.vstack((X_train, X_test))
         y_combined = np.hstack((y_train, y_test))
 
-        self.plot_decision_regions(X_combined, y_combined, classifier=tree, test_idx=range(105, 150))
+        self.plot_decision_regions(X_combined, y_combined, classifier=result, test_idx=range(105, 150))
 
         plt.xlabel('petal length [cm]')
         plt.ylabel('petal width [cm]')
         plt.legend(loc='upper left')
         plt.show()
 
-        export_graphviz(tree, out_file='tree.dot', feature_names=['petal length', 'petal width'])
+        export_graphviz(tree, out_file='tree.dot', feature_names=file.values)'''
 
 
 
@@ -269,12 +271,29 @@ class View(object):
 
     def padronizarDados(self, file, tipo):
         if tipo == 'ameaca':
-            dadosNaoRotulados = file[['Destination Port', 'Session ID', 'Repeat Count']]
-            scaler = preprocessing.StandardScaler()
-            scaler.fit(dadosNaoRotulados)
-            dadosTransformados = scaler.transform(dadosNaoRotulados)
+            file = file.apply(preprocessing.LabelEncoder().fit_transform)
 
-            ''' self.metodoElbow(dadosTransformados)'''
+            scaler = preprocessing.StandardScaler().fit(file)
+            dadosTransformados = scaler.transform(file)
+            model = ExtraTreesClassifier()
+            x = file.values
+            y = file.columns
+            x = x.transpose()
+            model.fit(x, y)
+            print(model.feature_importances_)
+            exit()
+
+            '''le = preprocessing.LabelEncoder()
+             file = file.apply(le.fit_transform)
+             model = ExtraTreesClassifier()
+             x = file.values
+             y = file.columns
+             x = x.transpose()
+             model.fit(x, y)
+             # display the relative importance of each attribute'''
+
+            self.metodoElbow(dadosTransformados)
+
             k = 6
             self.encontrarSimilaridade(k,dadosTransformados, 'ameaca', file)
         else:
