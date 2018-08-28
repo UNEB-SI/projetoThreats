@@ -5,14 +5,13 @@ import pandas as pd
 from sklearn import preprocessing
 from sklearn.cluster import KMeans
 from sklearn.ensemble import ExtraTreesClassifier
-from sklearn.preprocessing import LabelEncoder
 from sklearn.tree import DecisionTreeClassifier
 from sklearn import tree
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 import numpy as np
 from matplotlib.colors import ListedColormap
-from sklearn.tree import export_graphviz
+from sklearn.feature_selection import SelectFromModel
 import graphviz
 
 
@@ -271,28 +270,25 @@ class View(object):
 
     def padronizarDados(self, file, tipo):
         if tipo == 'ameaca':
+            le = preprocessing.LabelEncoder()
             file = file.apply(preprocessing.LabelEncoder().fit_transform)
 
             scaler = preprocessing.StandardScaler().fit(file)
             dadosTransformados = scaler.transform(file)
-            model = ExtraTreesClassifier()
             x = file.values
             y = file.columns
+
             x = x.transpose()
-            model.fit(x, y)
-            print(model.feature_importances_)
-            exit()
+            clf = ExtraTreesClassifier()
+            clf.fit(x, y)
+            clf.feature_importances_
 
-            '''le = preprocessing.LabelEncoder()
-             file = file.apply(le.fit_transform)
-             model = ExtraTreesClassifier()
-             x = file.values
-             y = file.columns
-             x = x.transpose()
-             model.fit(x, y)
-             # display the relative importance of each attribute'''
+            model = SelectFromModel(clf, prefit=True)
+            X_new = model.transform(x)
+            X_new.shape
+            X_new = X_new.transpose()
 
-            self.metodoElbow(dadosTransformados)
+            self.metodoElbow(X_new)
 
             k = 6
             self.encontrarSimilaridade(k,dadosTransformados, 'ameaca', file)
