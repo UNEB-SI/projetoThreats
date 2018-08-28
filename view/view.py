@@ -58,19 +58,21 @@ class View(object):
     def OpenFile(self):
         nomeArquivo = filedialog.askopenfilename(initialdir="", title="Select file", filetypes=[("all files", ".*")])
         with open(nomeArquivo, 'r', encoding='utf-8') as arquivo:
-            df = pd.read_csv(arquivo)
-            count = df['Destination User'].count()
+            df = pd.read_csv(arquivo, parse_dates=True)
+            #df.fillna(0, axis='columns', inplace=True)
 
             if(df['Type'][0] == "THREAT"):
-                for i in range(count):
+                df['Receive Time'] = pd.to_datetime(df['Receive Time'])
+                df['Generate Time'] = pd.to_datetime(df['Generate Time'])
+                for i in range(df['Destination User'].count()):
                     destino =df['Destination User'][i]
                     origem =df['Source User'][i]
 
                     if type(destino) == float:
-                        df.loc[i, 'Destination User'] = 'Local User'
+                        df.loc[i, 'Destination User'] = 'Any'
 
                     if type(origem) == float:
-                        df.loc[i, 'Source User'] = 'Local User'
+                        df.loc[i, 'Source User'] = 'Any'
 
                 results = {
                     'Receive Time': df['Receive Time'],
@@ -272,9 +274,8 @@ class View(object):
         if tipo == 'ameaca':
             le = preprocessing.LabelEncoder()
             file = file.apply(preprocessing.LabelEncoder().fit_transform)
-
-            scaler = preprocessing.StandardScaler().fit(file)
-            dadosTransformados = scaler.transform(file)
+            scaler = preprocessing.StandardScaler()
+            scaler.fit_transform(file)
             x = file.values
             y = file.columns
 
@@ -288,10 +289,19 @@ class View(object):
             X_new.shape
             X_new = X_new.transpose()
 
+            features = file.columns.difference(['Class'])
+
+            features_importance = zip(clf.feature_importances_, features)
+            for importance, feature in sorted(features_importance, reverse=True):
+                print("%s: %f%%" % (feature, importance * 100))
+
+            print(feature)
+            exit()
+
             self.metodoElbow(X_new)
 
-            k = 6
-            self.encontrarSimilaridade(k,dadosTransformados, 'ameaca', file)
+            k = 9
+            self.encontrarSimilaridade(k,X_new, 'ameaca', file)
         else:
             dadosNaoRotulados = file[['Destination Port', 'Session ID', 'Repeat Count', 'pkts_received', 'pkts_sent']]
             scaler = preprocessing.StandardScaler()
