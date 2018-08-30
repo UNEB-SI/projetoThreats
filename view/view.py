@@ -13,6 +13,8 @@ import numpy as np
 from matplotlib.colors import ListedColormap
 from sklearn.feature_selection import SelectFromModel
 import graphviz
+from kmodes.kmodes import KModes
+
 
 
 class View(object):
@@ -64,6 +66,7 @@ class View(object):
             if(df['Type'][0] == "THREAT"):
                 df['Receive Time'] = pd.to_datetime(df['Receive Time'])
                 df['Generate Time'] = pd.to_datetime(df['Generate Time'])
+
                 for i in range(df['Destination User'].count()):
                     destino =df['Destination User'][i]
                     origem =df['Source User'][i]
@@ -94,7 +97,7 @@ class View(object):
                      'Repeat Count': df['Repeat Count']
                 }
 
-                arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/Novos/ameacaCSV.csv'
+                arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/Novos/trainThreats.csv'
                 stringP = pd.DataFrame(results, columns = ['Receive Time', 'Generate Time','Source Address', 'Destination Address',
                                         'Source Zone', 'Destination Zone', 'Destination Port', 'Threat/Content Name', 'Severity',
                                         'thr_category', 'Destination User', 'Source User', 'Rule', 'Application', 'Direction',
@@ -127,7 +130,7 @@ class View(object):
                     'pkts_sent': df['pkts_sent']
                 }
 
-                arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Tráfego/Novos/trafegoCSV.csv'
+                arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Tráfego/Novos/trainTraffic.csv'
                 stringP = pd.DataFrame(results, columns=['Receive Time', 'Generate Time','Source Address', 'Destination Address', 'Source Zone',
                                                         'Destination Zone','Destination Port', 'Destination User', 'Source User', 'Rule',
                                                         'Threat/Content Type','session_end_reason', 'Application', 'Session ID','Repeat Count',
@@ -224,29 +227,25 @@ class View(object):
 
     def metodoElbow(self, x):
         wcss = []
-        for i in range(1, 30):
+        for i in range(1, 20):
             kmeans = KMeans(n_clusters=i, init='random')
             kmeans.fit(x)
             print(i, kmeans.inertia_)
             wcss.append(kmeans.inertia_)
 
-        plt.plot(range(1, 30), wcss)
+        plt.plot(range(1, 20), wcss)
         plt.title('O Metodo Elbow')
         plt.xlabel('Numero de Clusters')
         plt.ylabel('WSS')  # within cluster sum of squares
         plt.show()
 
     def encontrarSimilaridade(self, k, dadosTransformados, tipo, file):
-        if tipo == 'ameaca':
-            kmeans = KMeans(n_clusters=k, init='random')
-            title = 'Threat'
-        else:
-            kmeans = KMeans(n_clusters=k, init='random')
-            title = 'Traffic'
-
+        kmeans = KMeans(n_clusters=k, init='random')
         kmeans.fit(dadosTransformados)
         labels = kmeans.predict(dadosTransformados)
-        clusters = {}
+
+
+        '''clusters = {}
         n = 0
         for item in labels:
             if item in clusters:
@@ -255,62 +254,77 @@ class View(object):
                 clusters[item] = [dadosTransformados[n]]
             n += 1
 
-        '''for item in clusters:
+        for item in clusters:
             print("Cluster ", item)
             for i in clusters[item]:
                 print(i)'''
 
-        self.classificador(file, 'ameaca')
+        plt.scatter(dadosTransformados[:, 0], dadosTransformados[:, 1], c=labels, s=50, cmap='viridis')
 
-        plt.scatter(dadosTransformados[:, 0], dadosTransformados[:, 1], s=100, c=kmeans.labels_)
-        plt.scatter(kmeans.cluster_centers_[:, 0], kmeans.cluster_centers_[:, 1], s=300, c='red', label='Centroids')
-        plt.title(title + ' Clusters and Centroids')
+        centers = kmeans.cluster_centers_
+        plt.scatter(centers[:, 0], centers[:, 1], c='black', s=200, alpha=0.5)
+        plt.show()
+
+        #self.classificador(file, tipo)
+
+        '''plt.scatter(dadosTransformados[:, 0], dadosTransformados[:, 1], s=100, c=kmeans.labels_)
+        plt.scatter(kmeans.cluster_centers_[:, 0], kmeans.cluster_centers_[:, 1], s=300, c='black', label='Centroids')
+        plt.title(tipo + ' Clusters and Centroids')
         plt.xlabel('SepalLength')
         plt.ylabel('SepalWidth')
         plt.legend()
-        plt.show()
+        plt.show()'''
 
     def padronizarDados(self, file, tipo):
-        if tipo == 'ameaca':
-            le = preprocessing.LabelEncoder()
-            file = file.apply(preprocessing.LabelEncoder().fit_transform)
-            scaler = preprocessing.StandardScaler()
-            scaler.fit_transform(file)
-            x = file.values
-            y = file.columns
 
-            x = x.transpose()
-            clf = ExtraTreesClassifier()
-            clf.fit(x, y)
-            clf.feature_importances_
+        km = KModes(n_clusters=9, init='Huang', n_init=5, verbose=1)
 
-            model = SelectFromModel(clf, prefit=True)
-            X_new = model.transform(x)
-            X_new.shape
-            X_new = X_new.transpose()
+        clusters = km.fit_predict(file)
 
-            features = file.columns.difference(['Class'])
+        # Print the cluster centroids
+        print(km.cluster_centroids_)
 
-            features_importance = zip(clf.feature_importances_, features)
-            for importance, feature in sorted(features_importance, reverse=True):
-                print("%s: %f%%" % (feature, importance * 100))
+        '''le = preprocessing.LabelEncoder()
+        file = file.apply(preprocessing.LabelEncoder().fit_transform)
+        scaler = preprocessing.StandardScaler()
+        new = scaler.fit_transform(file)
 
-            print(feature)
-            exit()
+        x = file.values
+        y = file.columns
 
-            self.metodoElbow(X_new)
+        #variaveis quantitativas nominal, pois nao precisa de uma ordem
+        #teste não paramétricos (qui - quadrado)
+        #features são os valores , caracterisiticas, e classes são  strings que caractreiza um valor da feature
 
-            k = 9
-            self.encontrarSimilaridade(k,X_new, 'ameaca', file)
-        else:
-            dadosNaoRotulados = file[['Destination Port', 'Session ID', 'Repeat Count', 'pkts_received', 'pkts_sent']]
-            scaler = preprocessing.StandardScaler()
-            scaler.fit(dadosNaoRotulados)
-            dadosTransformados = scaler.transform(dadosNaoRotulados)
+        x = x.transpose()
+        clf = ExtraTreesClassifier()
+        clf.fit(x, y)
+        clf.feature_importances_
 
-            #self.metodoElbow(dadosTranformados)
-            '''k = 4
-            self.encontrarSimilaridade(k, dadosTransformados, 'trafego')'''
+        model = SelectFromModel(clf, prefit=True)
+        X_new = model.transform(x)
+        X_new.shape
+        X_new = X_new.transpose()
+
+        features = file.columns.difference(['Class'])
+        print(file['Class'])
+        exit()
+
+
+        features_importance = zip(clf.feature_importances_, features)
+        for importance, feature in sorted(features_importance):
+            print("%s: %f%%" % (feature, importance * 100))
+
+        exit()
+
+
+
+        self.metodoElbow(new)
+
+        k = 10
+        self.encontrarSimilaridade(k,new, tipo, file)'''
+
+
 
 root = Tk()
 View(root)
