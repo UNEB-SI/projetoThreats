@@ -178,9 +178,9 @@ class View(object):
                         alpha=1.0, linewidth=1, marker='o',
                         s=55, label='test set')
 
-    def classificador(self, file, tipo):
+    def classificador(self, features, classes):
 
-        if tipo == 'ameaca':  # pode trabalhar somente com os dados categóricos de cada tipo de arquivo
+        '''if tipo == 'ameaca':  # pode trabalhar somente com os dados categóricos de cada tipo de arquivo
             le = preprocessing.LabelEncoder()
             file = file.apply(le.fit_transform)
             X = file.values
@@ -191,20 +191,65 @@ class View(object):
             X = file.iloc[:, :]
             y = file.columns
             X.shape
-            X = X.transpose()
+            X = X.transpose()'''
 
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
+        arq = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/teste/teste.csv'
+        with open(arq, 'r', encoding='utf-8') as arquivo:
+            y = pd.read_csv(arquivo,  parse_dates=True)
+
+        for i in range(y['Destination User'].count()):
+            destino = y['Destination User'][i]
+            origem = y['Source User'][i]
+
+            if type(destino) == float:
+                y.loc[i, 'Destination User'] = 'Any'
+
+            if type(origem) == float:
+                y.loc[i, 'Source User'] = 'Any'
+
+        results = {
+            'Receive Time': y['Receive Time'],
+            'Generate Time': y['Generate Time'],
+            'Source Address': y['Source address'],
+            'Destination Address': y['Destination address'],
+            'Source Zone': y['Source Zone'],
+            'Destination Zone': y['Destination Zone'],
+            'Destination Port': y['Destination Port'],
+            'Threat/Content Name': y['Threat/Content Name'],
+            'Severity': y['Severity'],
+            'thr_category': y['thr_category'],
+            'Destination User': y['Destination User'],
+            'Source User': y['Source User'],
+            'Rule': y['Rule'],
+            'Application': y['Application'],
+            'Direction': y['Direction'],
+            'Session ID': y['Session ID'],
+            'Repeat Count': y['Repeat Count']
+        }
+
+        arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/teste/testeThreats.csv'
+        stringP = pd.DataFrame(results, columns=['Receive Time', 'Generate Time', 'Source Address',
+                                                 'Destination Address',
+                                                 'Source Zone', 'Destination Zone', 'Destination Port',
+                                                 'Threat/Content Name', 'Severity',
+                                                 'thr_category', 'Destination User', 'Source User', 'Rule',
+                                                 'Application', 'Direction',
+                                                 'Session ID', 'Repeat Count'])
+
+        stringP.to_csv(arquivoOutput)
+
+        X_train, X_test, y_train, y_test = train_test_split(features, stringP, test_size=0.3, random_state=0)
         result = DecisionTreeClassifier(criterion='gini', max_depth=3, random_state=0)
         result.fit(X_train, y_train)
-        '''result.predict(X_train)'''
+        result.predict(X_train)
 
-        dot_data = tree.export_graphviz(result, out_file=None,
+        '''dot_data = tree.export_graphviz(result, out_file=None,
                                         feature_names=file.values,
                                         class_names=file.columns,
                                         filled=True, rounded=True,
                                         special_characters=True)
         graph = graphviz.Source(dot_data)
-        graph.render("file", view=True)
+        graph.render("file", view=True)'''
 
         # result.predict(X_test)
 
@@ -293,7 +338,7 @@ class View(object):
         kproto = KPrototypes(n_clusters=15, init='Cao', verbose=2)
         clusters = kproto.fit_predict(X, categorical=[0,1,2,3,5,6,7,8,9,10,11,12])
         # Print cluster centroids of the trained model.
-        print(kproto.cluster_centroids_)
+        '''print(kproto.cluster_centroids_)
         # Print training statistics
         print(kproto.cost_)
         print(kproto.n_iter_)
@@ -306,18 +351,19 @@ class View(object):
             plt.suptitle('Data points categorized with category score', fontsize=18)
             plt.xlabel('Category Score', fontsize=16)
             plt.ylabel('Category Type', fontsize=16)
-        plt.show()
+        plt.show()'''
         # Clustered result
-        fig1, ax3 = plt.subplots()
+        '''fig1, ax3 = plt.subplots()
         scatter = ax3.scatter(syms, clusters, c=clusters, s=50)
         ax3.set_xlabel('Data points')
         ax3.set_ylabel('Cluster')
         plt.colorbar(scatter)
         ax3.set_title('Data points classifed according to known centers')
-        plt.show()
+        plt.show()'''
         result = zip(syms, kproto.labels_)
         sortedR = sorted(result, key=lambda x: x[1])
         print(sortedR)
+        self.classificador(kproto.cluster_centroids_, sortedR) #primeiro argumento serão as features e o segundo argumento serão as classes
 
         '''le = preprocessing.LabelEncoder()
         file = file.apply(preprocessing.LabelEncoder().fit_transform)
