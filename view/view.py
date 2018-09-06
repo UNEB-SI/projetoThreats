@@ -287,12 +287,11 @@ class View(object):
         caminho = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/Novos/trainThreats.csv'
         colors = ['b', 'orange', 'g', 'r', 'c', 'm', 'y', 'k', 'Brown', 'ForestGreen']
         # Data points with their publisher name,category score, category name, place name
-        syms = np.genfromtxt(caminho, delimiter=',', dtype=str, skip_header=1)[:,0]
-        X = np.genfromtxt(caminho,  delimiter=',',  dtype=object, skip_header=1)[:, 1:]
+        syms = np.genfromtxt(caminho, delimiter=',', dtype=str, skip_header=1)[:,1]
+        X = np.genfromtxt(caminho,  delimiter=',',  dtype=object, skip_header=1)[:, 3:]
         #X[:, 0] = X[:, 0].astype(float)
-
         kproto = KPrototypes(n_clusters=15, init='Cao', verbose=2)
-        clusters = kproto.fit_predict(X, categorical=[1,2,3,4,5,7,8,9,10,11,12,13,14])
+        clusters = kproto.fit_predict(X, categorical=[0,1,2,3,5,6,7,8,9,10,11,12])
         # Print cluster centroids of the trained model.
         print(kproto.cluster_centroids_)
         # Print training statistics
