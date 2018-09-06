@@ -16,10 +16,9 @@ import graphviz
 from kmodes.kmodes import KModes
 
 
-
 class View(object):
 
-    def __init__(self, master = None):
+    def __init__(self, master=None):
         self.root = master
         self.root.title('Correlação de Evento e Análise de Vulnerabilidade')
         self.root.geometry('1000x1000+200+20')
@@ -28,13 +27,12 @@ class View(object):
         descricao.pack()
         self.menu()
 
-
     def menu(self):
 
         menu = tk.Menu(self.root)
-        #filemenu = Menu(menu)
+        # filemenu = Menu(menu)
         filemenu = tk.Menu(menu, tearoff=0)
-        #filemenu.add_command(label="Sair", command=self.root.quit)
+        # filemenu.add_command(label="Sair", command=self.root.quit)
         # menu.add_cascade(label="Arquivo", menu=filemenu)
 
         # menu.add_cascade(label="File", menu=filemenu)
@@ -51,7 +49,6 @@ class View(object):
         menu.add_cascade(label="Help", menu=helpmenu)
         helpmenu.add_command(label="About...", command=About)'''
 
-
         # root['bg'] = 'nome da cor'
 
     def NewFile(self):
@@ -61,15 +58,15 @@ class View(object):
         nomeArquivo = filedialog.askopenfilename(initialdir="", title="Select file", filetypes=[("all files", ".*")])
         with open(nomeArquivo, 'r', encoding='utf-8') as arquivo:
             df = pd.read_csv(arquivo, parse_dates=True)
-            #df.fillna(0, axis='columns', inplace=True)
+            # df.fillna(0, axis='columns', inplace=True)
 
-            if(df['Type'][0] == "THREAT"):
+            if (df['Type'][0] == "THREAT"):
                 df['Receive Time'] = pd.to_datetime(df['Receive Time'])
                 df['Generate Time'] = pd.to_datetime(df['Generate Time'])
 
                 for i in range(df['Destination User'].count()):
-                    destino =df['Destination User'][i]
-                    origem =df['Source User'][i]
+                    destino = df['Destination User'][i]
+                    origem = df['Source User'][i]
 
                     if type(destino) == float:
                         df.loc[i, 'Destination User'] = 'Any'
@@ -81,27 +78,30 @@ class View(object):
                     'Receive Time': df['Receive Time'],
                     'Generate Time': df['Generate Time'],
                     'Source Address': df['Source address'],
-                     'Destination Address': df['Destination address'],
-                     'Source Zone': df['Source Zone'],
-                     'Destination Zone':df['Destination Zone'] ,
-                     'Destination Port':df['Destination Port'],
-                     'Threat/Content Name': df['Threat/Content Name'],
-                     'Severity': df['Severity'],
-                     'thr_category': df['thr_category'],
-                     'Destination User': df['Destination User'],
-                     'Source User': df['Source User'],
-                     'Rule': df['Rule'],
-                     'Application': df['Application'],
-                     'Direction': df['Direction'],
-                     'Session ID': df['Session ID'],
-                     'Repeat Count': df['Repeat Count']
+                    'Destination Address': df['Destination address'],
+                    'Source Zone': df['Source Zone'],
+                    'Destination Zone': df['Destination Zone'],
+                    'Destination Port': df['Destination Port'],
+                    'Threat/Content Name': df['Threat/Content Name'],
+                    'Severity': df['Severity'],
+                    'thr_category': df['thr_category'],
+                    'Destination User': df['Destination User'],
+                    'Source User': df['Source User'],
+                    'Rule': df['Rule'],
+                    'Application': df['Application'],
+                    'Direction': df['Direction'],
+                    'Session ID': df['Session ID'],
+                    'Repeat Count': df['Repeat Count']
                 }
 
                 arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/Novos/trainThreats.csv'
-                stringP = pd.DataFrame(results, columns = ['Receive Time', 'Generate Time','Source Address', 'Destination Address',
-                                        'Source Zone', 'Destination Zone', 'Destination Port', 'Threat/Content Name', 'Severity',
-                                        'thr_category', 'Destination User', 'Source User', 'Rule', 'Application', 'Direction',
-                                        'Session ID', 'Repeat Count'])
+                stringP = pd.DataFrame(results, columns=['Receive Time', 'Generate Time', 'Source Address',
+                                                         'Destination Address',
+                                                         'Source Zone', 'Destination Zone', 'Destination Port',
+                                                         'Threat/Content Name', 'Severity',
+                                                         'thr_category', 'Destination User', 'Source User', 'Rule',
+                                                         'Application', 'Direction',
+                                                         'Session ID', 'Repeat Count'])
 
                 stringP.to_csv(arquivoOutput)
                 self.padronizarDados(stringP, 'ameaca')
@@ -131,10 +131,14 @@ class View(object):
                 }
 
                 arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Tráfego/Novos/trainTraffic.csv'
-                stringP = pd.DataFrame(results, columns=['Receive Time', 'Generate Time','Source Address', 'Destination Address', 'Source Zone',
-                                                        'Destination Zone','Destination Port', 'Destination User', 'Source User', 'Rule',
-                                                        'Threat/Content Type','session_end_reason', 'Application', 'Session ID','Repeat Count',
-                                                        'Action', 'IP Protocol', 'action_source', 'pkts_received', 'pkts_sent'])
+                stringP = pd.DataFrame(results, columns=['Receive Time', 'Generate Time', 'Source Address',
+                                                         'Destination Address', 'Source Zone',
+                                                         'Destination Zone', 'Destination Port', 'Destination User',
+                                                         'Source User', 'Rule',
+                                                         'Threat/Content Type', 'session_end_reason', 'Application',
+                                                         'Session ID', 'Repeat Count',
+                                                         'Action', 'IP Protocol', 'action_source', 'pkts_received',
+                                                         'pkts_sent'])
 
                 stringP.to_csv(arquivoOutput)
                 self.padronizarDados(stringP, 'trafego')
@@ -142,7 +146,7 @@ class View(object):
     def About(self):
         print("This is a simple example of a menu")
 
-    def plot_decision_regions(self,X, y, classifier, test_idx=None, resolution=0.02):
+    def plot_decision_regions(self, X, y, classifier, test_idx=None, resolution=0.02):
         # setup marker generator and color map
         markers = ('s', 'x', 'o', '^', 'v')
         colors = ('red', 'blue', 'lightgreen', 'gray', 'cyan')
@@ -161,7 +165,6 @@ class View(object):
         plt.xlim(xx1.min(), xx1.max())
         plt.ylim(xx2.min(), xx2.max())
 
-
         # plot all samples
         X_test, y_test = X[test_idx, :], y[test_idx]
         for idx, cl in enumerate(np.unique(y)):
@@ -175,10 +178,9 @@ class View(object):
                         alpha=1.0, linewidth=1, marker='o',
                         s=55, label='test set')
 
-
     def classificador(self, file, tipo):
 
-        if tipo == 'ameaca': #pode trabalhar somente com os dados categóricos de cada tipo de arquivo
+        if tipo == 'ameaca':  # pode trabalhar somente com os dados categóricos de cada tipo de arquivo
             le = preprocessing.LabelEncoder()
             file = file.apply(le.fit_transform)
             X = file.values
@@ -191,25 +193,22 @@ class View(object):
             X.shape
             X = X.transpose()
 
-
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
         result = DecisionTreeClassifier(criterion='gini', max_depth=3, random_state=0)
         result.fit(X_train, y_train)
         '''result.predict(X_train)'''
 
         dot_data = tree.export_graphviz(result, out_file=None,
-                                feature_names=file.values,
-                                class_names=file.columns,
-                                filled=True, rounded=True,
-                                special_characters=True)
+                                        feature_names=file.values,
+                                        class_names=file.columns,
+                                        filled=True, rounded=True,
+                                        special_characters=True)
         graph = graphviz.Source(dot_data)
         graph.render("file", view=True)
 
-        #result.predict(X_test)
+        # result.predict(X_test)
 
-
-        #prev = tree.predict(X_test)'''
-
+        # prev = tree.predict(X_test)'''
 
         '''X_combined = np.vstack((X_train, X_test))
         y_combined = np.hstack((y_train, y_test))
@@ -222,8 +221,6 @@ class View(object):
         plt.show()
 
         export_graphviz(tree, out_file='tree.dot', feature_names=file.values)'''
-
-
 
     def metodoElbow(self, x):
         wcss = []
@@ -243,7 +240,6 @@ class View(object):
         kmeans = KMeans(n_clusters=k, init='random')
         kmeans.fit(dadosTransformados)
         labels = kmeans.predict(dadosTransformados)
-
 
         '''clusters = {}
         n = 0
@@ -265,7 +261,7 @@ class View(object):
         plt.scatter(centers[:, 0], centers[:, 1], c='black', s=200, alpha=0.5)
         plt.show()
 
-        #self.classificador(file, tipo)
+        # self.classificador(file, tipo)
 
         '''plt.scatter(dadosTransformados[:, 0], dadosTransformados[:, 1], s=100, c=kmeans.labels_)
         plt.scatter(kmeans.cluster_centers_[:, 0], kmeans.cluster_centers_[:, 1], s=300, c='black', label='Centroids')
@@ -277,12 +273,52 @@ class View(object):
 
     def padronizarDados(self, file, tipo):
 
-        km = KModes(n_clusters=9, init='Huang', n_init=5, verbose=1)
+        # km = KModes(n_clusters=9, init='Huang', n_init=5, verbose=1)
 
-        clusters = km.fit_predict(file)
+        # clusters = km.fit_predict(file)
 
         # Print the cluster centroids
-        print(km.cluster_centroids_)
+        # print(km.cluster_centroids_)
+
+        from kmodes.kprototypes import KPrototypes
+        import matplotlib.pyplot as plt
+        from matplotlib import style
+        style.use("ggplot")
+        caminho = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/Novos/trainThreats.csv'
+        colors = ['b', 'orange', 'g', 'r', 'c', 'm', 'y', 'k', 'Brown', 'ForestGreen']
+        # Data points with their publisher name,category score, category name, place name
+        syms = np.genfromtxt(caminho, delimiter=',', dtype=str, skip_header=1)[:,0]
+        X = np.genfromtxt(caminho,  delimiter=',',  dtype=object, skip_header=1)[:, 1:]
+        #X[:, 0] = X[:, 0].astype(float)
+
+        kproto = KPrototypes(n_clusters=15, init='Cao', verbose=2)
+        clusters = kproto.fit_predict(X, categorical=[1,2,3,4,5,7,8,9,10,11,12,13,14])
+        # Print cluster centroids of the trained model.
+        print(kproto.cluster_centroids_)
+        # Print training statistics
+        print(kproto.cost_)
+        print(kproto.n_iter_)
+        for s, c in zip(syms, clusters):
+            print("Result: {}, cluster:{}".format(s, c))
+        # Plot the results
+        for i in set(kproto.labels_):
+            index = kproto.labels_ == i
+            plt.plot(X[index, 0], X[index, 1], 'o')
+            plt.suptitle('Data points categorized with category score', fontsize=18)
+            plt.xlabel('Category Score', fontsize=16)
+            plt.ylabel('Category Type', fontsize=16)
+        plt.show()
+        # Clustered result
+        fig1, ax3 = plt.subplots()
+        scatter = ax3.scatter(syms, clusters, c=clusters, s=50)
+        ax3.set_xlabel('Data points')
+        ax3.set_ylabel('Cluster')
+        plt.colorbar(scatter)
+        ax3.set_title('Data points classifed according to known centers')
+        plt.show()
+        result = zip(syms, kproto.labels_)
+        sortedR = sorted(result, key=lambda x: x[1])
+        print(sortedR)
 
         '''le = preprocessing.LabelEncoder()
         file = file.apply(preprocessing.LabelEncoder().fit_transform)
@@ -323,7 +359,6 @@ class View(object):
 
         k = 10
         self.encontrarSimilaridade(k,new, tipo, file)'''
-
 
 
 root = Tk()
