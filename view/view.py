@@ -2,6 +2,7 @@ from tkinter import filedialog
 from tkinter import *
 import tkinter as tk
 import pandas as pd
+import os
 from sklearn import preprocessing
 from sklearn.cluster import KMeans
 from sklearn.ensemble import ExtraTreesClassifier
@@ -14,6 +15,9 @@ from matplotlib.colors import ListedColormap
 from sklearn.feature_selection import SelectFromModel
 import graphviz
 from kmodes.kmodes import KModes
+from kmodes.kprototypes import KPrototypes
+from matplotlib import style
+from xml.etree import ElementTree as et
 
 
 class View(object):
@@ -318,16 +322,6 @@ class View(object):
 
     def padronizarDados(self, file, tipo):
 
-        # km = KModes(n_clusters=9, init='Huang', n_init=5, verbose=1)
-
-        # clusters = km.fit_predict(file)
-
-        # Print the cluster centroids
-        # print(km.cluster_centroids_)
-
-        from kmodes.kprototypes import KPrototypes
-        import matplotlib.pyplot as plt
-        from matplotlib import style
         style.use("ggplot")
         caminho = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/Novos/trainThreats.csv'
         colors = ['b', 'orange', 'g', 'r', 'c', 'm', 'y', 'k', 'Brown', 'ForestGreen']
@@ -338,9 +332,9 @@ class View(object):
         kproto = KPrototypes(n_clusters=15, init='Cao', verbose=2)
         clusters = kproto.fit_predict(X, categorical=[0,1,2,3,5,6,7,8,9,10,11,12])
         # Print cluster centroids of the trained model.
-        '''print(kproto.cluster_centroids_)
+        print(kproto.cluster_centroids_)
         # Print training statistics
-        print(kproto.cost_)
+        ''' print(kproto.cost_)
         print(kproto.n_iter_)
         for s, c in zip(syms, clusters):
             print("Result: {}, cluster:{}".format(s, c))
@@ -353,17 +347,18 @@ class View(object):
             plt.ylabel('Category Type', fontsize=16)
         plt.show()'''
         # Clustered result
-        '''fig1, ax3 = plt.subplots()
-        scatter = ax3.scatter(syms, clusters, c=clusters, s=50)
-        ax3.set_xlabel('Data points')
-        ax3.set_ylabel('Cluster')
+        #fig1, ax3 = plt.subplots()
+        scatter = plt.scatter(syms, clusters, c=clusters, s=5)
+        plt.xlabel('Data points')
+        plt.ylabel('Cluster')
         plt.colorbar(scatter)
-        ax3.set_title('Data points classifed according to known centers')
-        plt.show()'''
-        result = zip(syms, kproto.labels_)
+        plt.title('Data points classifed according to known centers')
+        plt.show()
+        '''result = zip(syms, kproto.labels_)
         sortedR = sorted(result, key=lambda x: x[1])
-        print(sortedR)
-        self.classificador(kproto.cluster_centroids_, sortedR) #primeiro argumento serão as features e o segundo argumento serão as classes
+        print(sortedR)'''
+
+        #self.classificador(kproto.cluster_centroids_, sortedR) #primeiro argumento serão as features e o segundo argumento serão as classes
 
         '''le = preprocessing.LabelEncoder()
         file = file.apply(preprocessing.LabelEncoder().fit_transform)
@@ -386,6 +381,7 @@ class View(object):
         X_new = model.transform(x)
         X_new.shape
         X_new = X_new.transpose()
+        
 
         features = file.columns.difference(['Class'])
         print(file['Class'])
@@ -404,6 +400,34 @@ class View(object):
 
         k = 10
         self.encontrarSimilaridade(k,new, tipo, file)'''
+
+        self.lerXML(clusters)
+
+    def lerXML(self, clusters):
+
+        print(clusters)
+        exit()
+
+        file_name = "C:/Users/Teste/Desktop/Logs - PP1/running-config.xml"
+        full_file = os.path.abspath(os.path.join('data', file_name))
+
+        dom = et.parse(full_file)
+        rules = dom.findall('devices/entry/vsys/entry/rulebase/security/rules/entry')
+
+        self.idAmecaFalsoPositivo(clusters, rules)
+
+    def idAmecaFalsoPositivo(self, clusters, rules):
+
+        for item in rules:
+            print("to: ", item.find("to/member").text)
+            print("from: ", item.find("from/member").text)
+            print("source: ", item.find("source/member").text)
+            print("destination: ", item.find("destination/member").text)
+            print("source-user: ", item.find("source-user/member").text)
+            print("category: ", item.find("category/member"))
+            print("application: ", item.find("application/member"))
+            print("service: ", item.find("service/member").text)
+            print("action: ", item.find("action").text)
 
 
 root = Tk()
