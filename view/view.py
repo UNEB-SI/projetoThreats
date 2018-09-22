@@ -16,8 +16,8 @@ from sklearn.feature_selection import SelectFromModel
 import graphviz
 from kmodes.kmodes import KModes
 from kmodes.kprototypes import KPrototypes
-from matplotlib import style
 from xml.etree import ElementTree as et
+from matplotlib import style
 
 
 class View(object):
@@ -61,12 +61,12 @@ class View(object):
     def OpenFile(self):
         nomeArquivo = filedialog.askopenfilename(initialdir="", title="Select file", filetypes=[("all files", ".*")])
         with open(nomeArquivo, 'r', encoding='utf-8') as arquivo:
-            df = pd.read_csv(arquivo, parse_dates=True)
+            df = pd.read_csv(arquivo)
             # df.fillna(0, axis='columns', inplace=True)
 
             if (df['Type'][0] == "THREAT"):
-                df['Receive Time'] = pd.to_datetime(df['Receive Time'])
-                df['Generate Time'] = pd.to_datetime(df['Generate Time'])
+                # df['Receive Time'] = pd.to_datetime(df['Receive Time'])
+                # df['Generate Time'] = pd.to_datetime(df['Generate Time'])
 
                 for i in range(df['Destination User'].count()):
                     destino = df['Destination User'][i]
@@ -199,7 +199,7 @@ class View(object):
 
         arq = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/teste/teste.csv'
         with open(arq, 'r', encoding='utf-8') as arquivo:
-            y = pd.read_csv(arquivo,  parse_dates=True)
+            y = pd.read_csv(arquivo, parse_dates=True)
 
         for i in range(y['Destination User'].count()):
             destino = y['Destination User'][i]
@@ -321,44 +321,78 @@ class View(object):
         plt.show()'''
 
     def padronizarDados(self, file, tipo):
-
-        style.use("ggplot")
+        self.lerXML(file)
+        # style.use("ggplot")
         caminho = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/Novos/trainThreats.csv'
         colors = ['b', 'orange', 'g', 'r', 'c', 'm', 'y', 'k', 'Brown', 'ForestGreen']
         # Data points with their publisher name,category score, category name, place name
-        syms = np.genfromtxt(caminho, delimiter=',', dtype=str, skip_header=1)[:,1]
-        X = np.genfromtxt(caminho,  delimiter=',',  dtype=object, skip_header=1)[:, 3:]
-        #X[:, 0] = X[:, 0].astype(float)
-        kproto = KPrototypes(n_clusters=15, init='Cao', verbose=2)
-        clusters = kproto.fit_predict(X, categorical=[0,1,2,3,5,6,7,8,9,10,11,12])
+        syms = np.genfromtxt(caminho, dtype=str, delimiter=',', skip_header=1)[:, 9]
+        X = np.genfromtxt(caminho, dtype=object, delimiter=',', skip_header=1)[:, 1:]
+
+        kproto = KPrototypes(n_clusters=5, init='Cao', verbose=2)
+        clusters = kproto.fit_predict(X, categorical=[0, 1, 2, 3, 4, 5, 7,8, 9, 10, 11, 12, 13,14])
+
         # Print cluster centroids of the trained model.
         print(kproto.cluster_centroids_)
         # Print training statistics
-        ''' print(kproto.cost_)
+        print(kproto.cost_)
         print(kproto.n_iter_)
+
         for s, c in zip(syms, clusters):
             print("Result: {}, cluster:{}".format(s, c))
+
+        my_dpi = 96
+        fig = plt.figure(figsize=(800/my_dpi, 800/my_dpi), dpi=my_dpi)
+        ax = fig.add_subplot(1, 1, 1)
+        newClusters = []
+        newSyms = []
+        newClusters.append(clusters)
+
+        le = preprocessing.LabelEncoder()
+        syms_ = le.fit_transform(syms)
+        newSyms.append(syms)
+
+        scatter = ax.scatter(X[:, 0], X[:, 1], c=clusters, s=50, cmap='viridis')
+
+        '''dadosAgrupados = zip(newSyms, newClusters)
+        for data in dadosAgrupados:
+            x, y = data
+            scatter = ax.scatter(x, y, alpha=0.8, c=clusters, edgecolors='none', s=100)
+
+        plt.title('K-Prototypes Clustering')
+        ax.set_xlabel('Severity')
+        ax.set_ylabel('Clusters')
+        plt.colorbar(scatter)
+        ax.set_title('Data points classifed according to known centers')
+        plt.show()'''
+
+
+
         # Plot the results
-        for i in set(kproto.labels_):
+        '''for i in set(kproto.labels_):
             index = kproto.labels_ == i
             plt.plot(X[index, 0], X[index, 1], 'o')
             plt.suptitle('Data points categorized with category score', fontsize=18)
             plt.xlabel('Category Score', fontsize=16)
             plt.ylabel('Category Type', fontsize=16)
-        plt.show()'''
-        # Clustered result
-        #fig1, ax3 = plt.subplots()
-        scatter = plt.scatter(syms, clusters, c=clusters, s=5)
-        plt.xlabel('Data points')
-        plt.ylabel('Cluster')
-        plt.colorbar(scatter)
-        plt.title('Data points classifed according to known centers')
+        plt.title('Resultado K-Prototypes')
+        plt.grid(True)
         plt.show()
-        '''result = zip(syms, kproto.labels_)
+
+        # Clustered result
+        fig1, ax3 = plt.subplots()
+        scatter = ax3.scatter(syms, clusters, c=clusters, s=50)
+        ax3.set_xlabel('Data points')
+        ax3.set_ylabel('Cluster')
+        plt.colorbar(scatter)
+        ax3.set_title('Data points classifed according to known centers')
+        plt.show()
+
+        result = zip(syms, kproto.labels_)
         sortedR = sorted(result, key=lambda x: x[1])
         print(sortedR)'''
 
-        #self.classificador(kproto.cluster_centroids_, sortedR) #primeiro argumento serão as features e o segundo argumento serão as classes
+        # self.classificador(kproto.cluster_centroids_, sortedR) #primeiro argumento serão as features e o segundo argumento serão as classes
 
         '''le = preprocessing.LabelEncoder()
         file = file.apply(preprocessing.LabelEncoder().fit_transform)
@@ -400,34 +434,45 @@ class View(object):
 
         k = 10
         self.encontrarSimilaridade(k,new, tipo, file)'''
+        self.lerXML(X)
 
-        self.lerXML(clusters)
-
-    def lerXML(self, clusters):
-
-        print(clusters)
-        exit()
+    def lerXML(self, X):
 
         file_name = "C:/Users/Teste/Desktop/Logs - PP1/running-config.xml"
         full_file = os.path.abspath(os.path.join('data', file_name))
 
         dom = et.parse(full_file)
-        rules = dom.findall('devices/entry/vsys/entry/rulebase/security/rules/entry')
+        rules = dom.findall('devices/entry/vsys/entry/rulebase/security/rules')
+        rulesEntry = dom.findall('devices/entry/vsys/entry/rulebase/security/rules/entry')
 
-        self.idAmecaFalsoPositivo(clusters, rules)
+        self.idAmecaFalsoPositivo(X, rules, rulesEntry)
 
-    def idAmecaFalsoPositivo(self, clusters, rules):
+    def idAmecaFalsoPositivo(self, X, rules, rulesEntry):
+        regras = []
 
-        for item in rules:
-            print("to: ", item.find("to/member").text)
-            print("from: ", item.find("from/member").text)
-            print("source: ", item.find("source/member").text)
-            print("destination: ", item.find("destination/member").text)
-            print("source-user: ", item.find("source-user/member").text)
-            print("category: ", item.find("category/member"))
-            print("application: ", item.find("application/member"))
-            print("service: ", item.find("service/member").text)
-            print("action: ", item.find("action").text)
+        for entry in rules:
+            for child in entry:
+                regras.append(child.attrib)
+
+
+        for i, item in enumerate(rulesEntry):
+            regras[i]['from'] = {item.find("from/member").text}
+            regras[i]['source'] = {item.find("source/member").text}
+            regras[i]['destination'] = {item.find("destination/member").text}
+            regras[i]['source-user'] = {item.find("source-user/member").text}
+            regras[i]['category'] = {item.find("category/member").text}
+            regras[i]['application'] = [item.find("application")]
+            regras[i]['service'] = {item.find("service/member").text}
+            regras[i]['action'] = {item.find("action").text}
+            regras[i]['app'] = []
+
+            for app in regras[i]['application']:
+                for node in app.getiterator():
+                    regras[i]['app'].append(node.text)
+
+        for cluster in X:
+            for x in cluster:
+                if(x)
 
 
 root = Tk()
