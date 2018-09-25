@@ -80,7 +80,6 @@ class View(object):
 
                 results = {
                     'Receive Time': df['Receive Time'],
-                    'Generate Time': df['Generate Time'],
                     'Source Address': df['Source address'],
                     'Destination Address': df['Destination address'],
                     'Source Zone': df['Source Zone'],
@@ -99,7 +98,7 @@ class View(object):
                 }
 
                 arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/Novos/trainThreats.csv'
-                stringP = pd.DataFrame(results, columns=['Receive Time', 'Generate Time', 'Source Address',
+                stringP = pd.DataFrame(results, columns=['Receive Time', 'Source Address',
                                                          'Destination Address',
                                                          'Source Zone', 'Destination Zone', 'Destination Port',
                                                          'Threat/Content Name', 'Severity',
@@ -108,7 +107,7 @@ class View(object):
                                                          'Session ID', 'Repeat Count'])
 
                 stringP.to_csv(arquivoOutput)
-                self.padronizarDados(stringP, 'ameaca')
+                self.padronizarDados(stringP)
 
             else:
                 results = {
@@ -320,17 +319,18 @@ class View(object):
         plt.legend()
         plt.show()'''
 
-    def padronizarDados(self, file, tipo):
-        self.lerXML(file)
+    def padronizarDados(self, file):
         # style.use("ggplot")
         caminho = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/Novos/trainThreats.csv'
         colors = ['b', 'orange', 'g', 'r', 'c', 'm', 'y', 'k', 'Brown', 'ForestGreen']
         # Data points with their publisher name,category score, category name, place name
-        syms = np.genfromtxt(caminho, dtype=str, delimiter=',', skip_header=1)[:, 9]
+        syms = np.genfromtxt(caminho, dtype=str, delimiter=',', skip_header=1)[:, 8]
         X = np.genfromtxt(caminho, dtype=object, delimiter=',', skip_header=1)[:, 1:]
 
         kproto = KPrototypes(n_clusters=5, init='Cao', verbose=2)
-        clusters = kproto.fit_predict(X, categorical=[0, 1, 2, 3, 4, 5, 7,8, 9, 10, 11, 12, 13,14])
+        clusters = kproto.fit_predict(X, categorical=[0, 1, 2, 3, 4, 6, 7,8, 9, 10, 11, 12, 13])
+
+        file['clusters'] = clusters
 
         # Print cluster centroids of the trained model.
         print(kproto.cluster_centroids_)
@@ -434,9 +434,9 @@ class View(object):
 
         k = 10
         self.encontrarSimilaridade(k,new, tipo, file)'''
-        self.lerXML(X)
+        self.lerXML(file)
 
-    def lerXML(self, X):
+    def lerXML(self,file):
 
         file_name = "C:/Users/Teste/Desktop/Logs - PP1/running-config.xml"
         full_file = os.path.abspath(os.path.join('data', file_name))
@@ -445,9 +445,9 @@ class View(object):
         rules = dom.findall('devices/entry/vsys/entry/rulebase/security/rules')
         rulesEntry = dom.findall('devices/entry/vsys/entry/rulebase/security/rules/entry')
 
-        self.idAmecaFalsoPositivo(X, rules, rulesEntry)
+        self.idAmecaFalsoPositivo(file, rules, rulesEntry)
 
-    def idAmecaFalsoPositivo(self, X, rules, rulesEntry):
+    def idAmecaFalsoPositivo(self, file, rules, rulesEntry):
         regras = []
 
         for entry in rules:
@@ -470,10 +470,20 @@ class View(object):
                 for node in app.getiterator():
                     regras[i]['app'].append(node.text)
 
-        for cluster in X:
-            for x in cluster:
-                if(x)
+        for i in enumerate(regras):
+            if(file['Rule'] == regras[i]['name']):
+                if(file['Severity'] != 'critical'):
+                    if((file['Application'] == regras[i]['app']) and (file['Source User'] == regras[i]['source-user'])):
+                        file['False Positive'] = 'yes'
+                    else:
+                        file['False Positive'] = 'no'
+                else:
+                    file['False Positive'] = 'no'
+            else:
+                print('Rule does not exist')
 
+        print(file)
+        exit()
 
 root = Tk()
 View(root)
