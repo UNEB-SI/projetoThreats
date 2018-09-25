@@ -471,10 +471,13 @@ class View(object):
                     regras[i]['app'].append(node.text)
 
         for i in enumerate(regras):
-            if(file['Rule'] == regras[i]['name']):
-                if(file['Severity'] != 'critical'):
-                    if((file['Application'] == regras[i]['app']) and (file['Source User'] == regras[i]['source-user'])):
-                        file['False Positive'] = 'yes'
+            if(file['Rule'][i] == regras[i]['name']):
+                print(file['Rule'][i] in regras[i]['name'])
+                exit()
+                if(file['Severity'][i] != 'critical'):
+                    if (file['Application'][i] in regras[i]['app']):
+                        if(file['Source User'][i] == regras[i]['source-user']):
+                            file['False Positive'] = 'yes'
                     else:
                         file['False Positive'] = 'no'
                 else:
