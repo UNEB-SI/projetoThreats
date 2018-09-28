@@ -73,10 +73,10 @@ class View(object):
                     origem = df['Source User'][i]
 
                     if type(destino) == float:
-                        df.loc[i, 'Destination User'] = 'Any'
+                        df.loc[i, 'Destination User'] = 'any'
 
                     if type(origem) == float:
-                        df.loc[i, 'Source User'] = 'Any'
+                        df.loc[i, 'Source User'] = 'any'
 
                 results = {
                     'Receive Time': df['Receive Time'],
@@ -438,7 +438,7 @@ class View(object):
 
     def lerXML(self,file):
 
-        file_name = "C:/Users/Teste/Desktop/Logs - PP1/running-config.xml"
+        file_name = "C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/unib/running-config.xml"
         full_file = os.path.abspath(os.path.join('data', file_name))
 
         dom = et.parse(full_file)
@@ -456,36 +456,71 @@ class View(object):
 
 
         for i, item in enumerate(rulesEntry):
-            regras[i]['from'] = {item.find("from/member").text}
-            regras[i]['source'] = {item.find("source/member").text}
-            regras[i]['destination'] = {item.find("destination/member").text}
-            regras[i]['source-user'] = {item.find("source-user/member").text}
-            regras[i]['category'] = {item.find("category/member").text}
+            regras[i]['to'] = [item.find("to")]
+            regras[i]['from'] = [item.find("from")]
+            regras[i]['source'] = [item.find("source")]
+            regras[i]['destination'] = [item.find("destination")]
+            regras[i]['source-user'] = [item.find("source-user")]
+            regras[i]['category'] = [item.find("category")]
             regras[i]['application'] = [item.find("application")]
-            regras[i]['service'] = {item.find("service/member").text}
-            regras[i]['action'] = {item.find("action").text}
-            regras[i]['app'] = []
+            regras[i]['service'] = [item.find("service")]
+            regras[i]['action'] = [item.find("action")]
+            regras[i]['to_'] = []
+            regras[i]['from_'] = []
+            regras[i]['source_'] = []
+            regras[i]['destination_'] = []
+            regras[i]['source-user_'] = []
+            regras[i]['category_'] = []
+            regras[i]['application_'] = []
+            regras[i]['service_'] = []
+
+            for to in regras[i]['to']:
+                for node1 in to.getiterator():
+                    regras[i]['to_'].append(node1.text)
+
+            for from_ in regras[i]['from']:
+                for node2 in from_.getiterator():
+                    regras[i]['from_'].append(node2.text)
+
+            for source in regras[i]['source']:
+                for node3 in source.getiterator():
+                    regras[i]['source_'].append(node3.text)
+
+            for destination in regras[i]['destination']:
+                for node4 in destination.getiterator():
+                    regras[i]['destination_'].append(node4.text)
+
+            for source_user in regras[i]['source-user']:
+                for node5 in source_user.getiterator():
+                    regras[i]['source-user_'].append(node5.text)
+
+            for category in regras[i]['category']:
+                for node6 in category.getiterator():
+                    regras[i]['category_'].append(node6.text)
 
             for app in regras[i]['application']:
-                for node in app.getiterator():
-                    regras[i]['app'].append(node.text)
+                for node7 in app.getiterator():
+                    regras[i]['application_'].append(node7.text)
 
-        for i in enumerate(regras):
-            if(file['Rule'][i] == regras[i]['name']):
-                print(file['Rule'][i] in regras[i]['name'])
-                exit()
-                if(file['Severity'][i] != 'critical'):
-                    if (file['Application'][i] in regras[i]['app']):
-                        if(file['Source User'][i] == regras[i]['source-user']):
-                            file['False Positive'] = 'yes'
+            for service in regras[i]['service']:
+                for node8 in service.getiterator():
+                    regras[i]['service_'].append(node8.text)
+
+        tamRegras = len(regras)
+        for index, row in file.iterrows():
+            for i in range(tamRegras):
+                if row["Rule"] == regras[i]['name']:
+                    if row["Severity"] != "critical":
+                        if ((row["Source Zone"] != "CORPORATIVA") and (row['Destination Zone'] == "CORPORATIVA") and
+                            (row["Application"] in regras[i]['application_']) and (row['Source User'] in regras[i]['source-user_'])):
+                                file.loc[index, 'False Positive'] = 'yes'
+                        else:
+                            file.loc[index, 'False Positive'] = 'no'
                     else:
-                        file['False Positive'] = 'no'
-                else:
-                    file['False Positive'] = 'no'
-            else:
-                print('Rule does not exist')
+                        file.loc[index,'False Positive'] = 'no'
 
-        print(file)
+        arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/new.csv'
+        file.to_csv(arquivoOutput)
         exit()
 
 root = Tk()
