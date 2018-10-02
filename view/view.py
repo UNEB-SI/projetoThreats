@@ -64,87 +64,49 @@ class View(object):
             df = pd.read_csv(arquivo)
             # df.fillna(0, axis='columns', inplace=True)
 
-            if (df['Type'][0] == "THREAT"):
-                # df['Receive Time'] = pd.to_datetime(df['Receive Time'])
-                # df['Generate Time'] = pd.to_datetime(df['Generate Time'])
+            # df['Receive Time'] = pd.to_datetime(df['Receive Time'])
+            # df['Generate Time'] = pd.to_datetime(df['Generate Time'])
 
-                for i in range(df['Destination User'].count()):
-                    destino = df['Destination User'][i]
-                    origem = df['Source User'][i]
+            for i in range(df['Destination User'].count()):
+                destino = df['Destination User'][i]
+                origem = df['Source User'][i]
 
-                    if type(destino) == float:
-                        df.loc[i, 'Destination User'] = 'any'
+                if type(destino) == float:
+                    df.loc[i, 'Destination User'] = 'any'
 
-                    if type(origem) == float:
-                        df.loc[i, 'Source User'] = 'any'
+                if type(origem) == float:
+                    df.loc[i, 'Source User'] = 'any'
 
-                results = {
-                    'Receive Time': df['Receive Time'],
-                    'Source Address': df['Source address'],
-                    'Destination Address': df['Destination address'],
-                    'Source Zone': df['Source Zone'],
-                    'Destination Zone': df['Destination Zone'],
-                    'Destination Port': df['Destination Port'],
-                    'Threat/Content Name': df['Threat/Content Name'],
-                    'Severity': df['Severity'],
-                    'thr_category': df['thr_category'],
-                    'Destination User': df['Destination User'],
-                    'Source User': df['Source User'],
-                    'Rule': df['Rule'],
-                    'Application': df['Application'],
-                    'Direction': df['Direction'],
-                    'Session ID': df['Session ID'],
-                    'Repeat Count': df['Repeat Count']
-                }
+            results = {
+                'Receive Time': df['Receive Time'],
+                'Source Address': df['Source address'],
+                'Destination Address': df['Destination address'],
+                'Source Zone': df['Source Zone'],
+                'Destination Zone': df['Destination Zone'],
+                'Destination Port': df['Destination Port'],
+                'Threat/Content Name': df['Threat/Content Name'],
+                'Severity': df['Severity'],
+                'thr_category': df['thr_category'],
+                'Destination User': df['Destination User'],
+                'Source User': df['Source User'],
+                'Rule': df['Rule'],
+                'Application': df['Application'],
+                'Direction': df['Direction'],
+                'Session ID': df['Session ID'],
+                'Repeat Count': df['Repeat Count']
+            }
 
-                arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/Novos/trainThreats.csv'
-                stringP = pd.DataFrame(results, columns=['Receive Time', 'Source Address',
-                                                         'Destination Address',
-                                                         'Source Zone', 'Destination Zone', 'Destination Port',
-                                                         'Threat/Content Name', 'Severity',
-                                                         'thr_category', 'Destination User', 'Source User', 'Rule',
-                                                         'Application', 'Direction',
-                                                         'Session ID', 'Repeat Count'])
+            arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/Novos/trainThreats.csv'
+            stringP = pd.DataFrame(results, columns=['Receive Time', 'Source Address',
+                                                     'Destination Address',
+                                                     'Source Zone', 'Destination Zone', 'Destination Port',
+                                                     'Threat/Content Name', 'Severity',
+                                                     'thr_category', 'Destination User', 'Source User', 'Rule',
+                                                     'Application', 'Direction',
+                                                     'Session ID', 'Repeat Count'])
 
-                stringP.to_csv(arquivoOutput)
-                self.padronizarDados(stringP)
-
-            else:
-                results = {
-                    'Receive Time': df['Receive Time'],
-                    'Generate Time': df['Generate Time'],
-                    'Source Address': df['Source address'],
-                    'Destination Address': df['Destination address'],
-                    'Source Zone': df['Source Zone'],
-                    'Destination Zone': df['Destination Zone'],
-                    'Destination Port': df['Destination Port'],
-                    'Destination User': df['Destination User'],
-                    'Source User': df['Source User'],
-                    'Rule': df['Rule'],
-                    'Threat/Content Type': df['Threat/Content Type'],
-                    'session_end_reason': df['session_end_reason'],
-                    'Application': df['Application'],
-                    'Session ID': df['Session ID'],
-                    'Repeat Count': df['Repeat Count'],
-                    'Action': df['Action'],
-                    'IP Protocol': df['IP Protocol'],
-                    'action_source': df['action_source'],
-                    'pkts_received': df['pkts_received'],
-                    'pkts_sent': df['pkts_sent']
-                }
-
-                arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Tráfego/Novos/trainTraffic.csv'
-                stringP = pd.DataFrame(results, columns=['Receive Time', 'Generate Time', 'Source Address',
-                                                         'Destination Address', 'Source Zone',
-                                                         'Destination Zone', 'Destination Port', 'Destination User',
-                                                         'Source User', 'Rule',
-                                                         'Threat/Content Type', 'session_end_reason', 'Application',
-                                                         'Session ID', 'Repeat Count',
-                                                         'Action', 'IP Protocol', 'action_source', 'pkts_received',
-                                                         'pkts_sent'])
-
-                stringP.to_csv(arquivoOutput)
-                self.padronizarDados(stringP, 'trafego')
+            stringP.to_csv(arquivoOutput)
+            self.padronizarDados(stringP)
 
     def About(self):
         print("This is a simple example of a menu")
@@ -181,7 +143,7 @@ class View(object):
                         alpha=1.0, linewidth=1, marker='o',
                         s=55, label='test set')
 
-    def classificador(self, features, classes):
+    def classificador(self, file):
 
         '''if tipo == 'ameaca':  # pode trabalhar somente com os dados categóricos de cada tipo de arquivo
             le = preprocessing.LabelEncoder()
@@ -196,7 +158,7 @@ class View(object):
             X.shape
             X = X.transpose()'''
 
-        arq = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/teste/teste.csv'
+        arq = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/treinamento/Ameaça 08.01.2018.csv'
         with open(arq, 'r', encoding='utf-8') as arquivo:
             y = pd.read_csv(arquivo, parse_dates=True)
 
@@ -205,14 +167,13 @@ class View(object):
             origem = y['Source User'][i]
 
             if type(destino) == float:
-                y.loc[i, 'Destination User'] = 'Any'
+                y.loc[i, 'Destination User'] = 'any'
 
             if type(origem) == float:
-                y.loc[i, 'Source User'] = 'Any'
+                y.loc[i, 'Source User'] = 'any'
 
         results = {
             'Receive Time': y['Receive Time'],
-            'Generate Time': y['Generate Time'],
             'Source Address': y['Source address'],
             'Destination Address': y['Destination address'],
             'Source Zone': y['Source Zone'],
@@ -231,20 +192,21 @@ class View(object):
         }
 
         arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/teste/testeThreats.csv'
-        stringP = pd.DataFrame(results, columns=['Receive Time', 'Generate Time', 'Source Address',
-                                                 'Destination Address',
+        stringP = pd.DataFrame(results, columns=['Receive Time', 'Source Address','Destination Address',
                                                  'Source Zone', 'Destination Zone', 'Destination Port',
-                                                 'Threat/Content Name', 'Severity',
-                                                 'thr_category', 'Destination User', 'Source User', 'Rule',
-                                                 'Application', 'Direction',
-                                                 'Session ID', 'Repeat Count'])
+                                                 'Threat/Content Name', 'Severity','thr_category',
+                                                 'Destination User', 'Source User', 'Rule',
+                                                 'Application', 'Direction','Session ID', 'Repeat Count', 'clusters', 'False Positive'])
 
         stringP.to_csv(arquivoOutput)
+        stringP = stringP.transpose()
+        file = file.transpose()
 
-        X_train, X_test, y_train, y_test = train_test_split(features, stringP, test_size=0.3, random_state=0)
+        X_train, X_test, y_train, y_test = train_test_split(file, stringP, test_size=0.3, random_state=0)
         result = DecisionTreeClassifier(criterion='gini', max_depth=3, random_state=0)
         result.fit(X_train, y_train)
         result.predict(X_train)
+
 
         '''dot_data = tree.export_graphviz(result, out_file=None,
                                         feature_names=file.values,
@@ -258,12 +220,12 @@ class View(object):
 
         # prev = tree.predict(X_test)'''
 
-        '''X_combined = np.vstack((X_train, X_test))
+        X_combined = np.vstack((X_train, X_test))
         y_combined = np.hstack((y_train, y_test))
 
         self.plot_decision_regions(X_combined, y_combined, classifier=result, test_idx=range(105, 150))
 
-        plt.xlabel('petal length [cm]')
+        '''plt.xlabel('petal length [cm]')
         plt.ylabel('petal width [cm]')
         plt.legend(loc='upper left')
         plt.show()
@@ -521,7 +483,9 @@ class View(object):
 
         arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/new.csv'
         file.to_csv(arquivoOutput)
-        exit()
+
+        self.classificador(file)
+
 
 root = Tk()
 View(root)
