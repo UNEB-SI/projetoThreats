@@ -70,12 +70,20 @@ class View(object):
             for i in range(df['Destination User'].count()):
                 destino = df['Destination User'][i]
                 origem = df['Source User'][i]
+                enderecoOrigem =  df['Source address'][i]
+                enderecoDestino = df['Destination address'][i]
 
                 if type(destino) == float:
                     df.loc[i, 'Destination User'] = 'any'
 
                 if type(origem) == float:
                     df.loc[i, 'Source User'] = 'any'
+
+                if type(enderecoOrigem) == float:
+                    df.loc[i, 'Source address'] = 'any'
+
+                if type(enderecoDestino) == float:
+                    df.loc[i, 'Destination address'] = 'any'
 
             results = {
                 'Receive Time': df['Receive Time'],
@@ -91,9 +99,7 @@ class View(object):
                 'Source User': df['Source User'],
                 'Rule': df['Rule'],
                 'Application': df['Application'],
-                'Direction': df['Direction'],
-                'Session ID': df['Session ID'],
-                'Repeat Count': df['Repeat Count']
+                'Direction': df['Direction']
             }
 
             arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/Novos/trainThreats.csv'
@@ -102,8 +108,7 @@ class View(object):
                                                      'Source Zone', 'Destination Zone', 'Destination Port',
                                                      'Threat/Content Name', 'Severity',
                                                      'thr_category', 'Destination User', 'Source User', 'Rule',
-                                                     'Application', 'Direction',
-                                                     'Session ID', 'Repeat Count'])
+                                                     'Application', 'Direction'])
 
             stringP.to_csv(arquivoOutput)
             self.padronizarDados(stringP)
@@ -165,12 +170,20 @@ class View(object):
         for i in range(y['Destination User'].count()):
             destino = y['Destination User'][i]
             origem = y['Source User'][i]
+            enderecoOrigem = y['Source address'][i]
+            enderecoDestino = y['Destination address'][i]
 
             if type(destino) == float:
                 y.loc[i, 'Destination User'] = 'any'
 
             if type(origem) == float:
                 y.loc[i, 'Source User'] = 'any'
+
+            if type(enderecoOrigem) == float:
+                y.loc[i, 'Source address'] = 'any'
+
+            if type(enderecoDestino) == float:
+                y.loc[i, 'Destination address'] = 'any'
 
         results = {
             'Receive Time': y['Receive Time'],
@@ -186,17 +199,15 @@ class View(object):
             'Source User': y['Source User'],
             'Rule': y['Rule'],
             'Application': y['Application'],
-            'Direction': y['Direction'],
-            'Session ID': y['Session ID'],
-            'Repeat Count': y['Repeat Count']
+            'Direction': y['Direction']
         }
 
         arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/teste/testeThreats.csv'
-        stringP = pd.DataFrame(results, columns=['Receive Time', 'Source Address','Destination Address',
+        stringP = pd.DataFrame(results, columns=['Receive Time', 'Source Address', 'Destination Address',
                                                  'Source Zone', 'Destination Zone', 'Destination Port',
-                                                 'Threat/Content Name', 'Severity','thr_category',
+                                                 'Threat/Content Name', 'Severity', 'thr_category',
                                                  'Destination User', 'Source User', 'Rule',
-                                                 'Application', 'Direction','Session ID', 'Repeat Count', 'clusters', 'False Positive'])
+                                                 'Application', 'Direction', 'clusters', 'False Positive'])
 
         stringP.to_csv(arquivoOutput)
         stringP = stringP.transpose()
@@ -206,7 +217,6 @@ class View(object):
         result = DecisionTreeClassifier(criterion='gini', max_depth=3, random_state=0)
         result.fit(X_train, y_train)
         result.predict(X_train)
-
 
         '''dot_data = tree.export_graphviz(result, out_file=None,
                                         feature_names=file.values,
@@ -289,8 +299,8 @@ class View(object):
         syms = np.genfromtxt(caminho, dtype=str, delimiter=',', skip_header=1)[:, 8]
         X = np.genfromtxt(caminho, dtype=object, delimiter=',', skip_header=1)[:, 1:]
 
-        kproto = KPrototypes(n_clusters=5, init='Cao', verbose=2)
-        clusters = kproto.fit_predict(X, categorical=[0, 1, 2, 3, 4, 6, 7,8, 9, 10, 11, 12, 13])
+        kproto = KPrototypes(n_clusters=5, init='Cao', verbose=2, gamma=None)
+        clusters = kproto.fit_predict(X, categorical=[0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13])
 
         file['clusters'] = clusters
 
@@ -304,7 +314,7 @@ class View(object):
             print("Result: {}, cluster:{}".format(s, c))
 
         my_dpi = 96
-        fig = plt.figure(figsize=(800/my_dpi, 800/my_dpi), dpi=my_dpi)
+        fig = plt.figure(figsize=(800 / my_dpi, 800 / my_dpi), dpi=my_dpi)
         ax = fig.add_subplot(1, 1, 1)
         newClusters = []
         newSyms = []
@@ -327,8 +337,6 @@ class View(object):
         plt.colorbar(scatter)
         ax.set_title('Data points classifed according to known centers')
         plt.show()'''
-
-
 
         # Plot the results
         '''for i in set(kproto.labels_):
@@ -398,7 +406,7 @@ class View(object):
         self.encontrarSimilaridade(k,new, tipo, file)'''
         self.lerXML(file)
 
-    def lerXML(self,file):
+    def lerXML(self, file):
 
         file_name = "C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/unib/running-config.xml"
         full_file = os.path.abspath(os.path.join('data', file_name))
@@ -415,7 +423,6 @@ class View(object):
         for entry in rules:
             for child in entry:
                 regras.append(child.attrib)
-
 
         for i, item in enumerate(rulesEntry):
             regras[i]['to'] = [item.find("to")]
@@ -472,14 +479,16 @@ class View(object):
         for index, row in file.iterrows():
             for i in range(tamRegras):
                 if row["Rule"] == regras[i]['name']:
-                    if row["Severity"] != "critical":
+                    if row["Severity"] != "critical" and row["Severity"] != "high":
                         if ((row["Source Zone"] != "CORPORATIVA") and (row['Destination Zone'] == "CORPORATIVA") and
-                            (row["Application"] in regras[i]['application_']) and (row['Source User'] in regras[i]['source-user_'])):
-                                file.loc[index, 'False Positive'] = 'yes'
+                                (row["Application"] in regras[i]['application_']) and (
+                                        row['Source User'] in regras[i]['source-user_']) and
+                                        (row["Source Address"] != "any") or (row['Destination Zone'] != "any")):
+                            file.loc[index, 'False Positive'] = 'yes'
                         else:
                             file.loc[index, 'False Positive'] = 'no'
                     else:
-                        file.loc[index,'False Positive'] = 'no'
+                        file.loc[index, 'False Positive'] = 'no'
 
         arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/new.csv'
         file.to_csv(arquivoOutput)
