@@ -150,73 +150,25 @@ class View(object):
 
     def classificador(self, file):
 
-        '''if tipo == 'ameaca':  # pode trabalhar somente com os dados categóricos de cada tipo de arquivo
-            le = preprocessing.LabelEncoder()
-            file = file.apply(le.fit_transform)
-            X = file.values
-            y = file.columns
-            X = X.transpose()
+        colunas = file.columns.drop('False Positive')
+        le = preprocessing.LabelEncoder()
+        x = file[colunas].values
+        y = le.fit_transform(file['False Positive'])
+        tamDF = colunas.size
 
-        else:
-            X = file.iloc[:, :]
-            y = file.columns
-            X.shape
-            X = X.transpose()'''
+        for i in range(tamDF):
+            print(i)
+            print(x[i])
+            x[i] = le.fit_transform(file[colunas[i]].values)
+            print(x[i])
+            exit()
 
-        arq = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/treinamento/Ameaça 08.01.2018.csv'
-        with open(arq, 'r', encoding='utf-8') as arquivo:
-            y = pd.read_csv(arquivo, parse_dates=True)
-
-        for i in range(y['Destination User'].count()):
-            destino = y['Destination User'][i]
-            origem = y['Source User'][i]
-            enderecoOrigem = y['Source address'][i]
-            enderecoDestino = y['Destination address'][i]
-
-            if type(destino) == float:
-                y.loc[i, 'Destination User'] = 'any'
-
-            if type(origem) == float:
-                y.loc[i, 'Source User'] = 'any'
-
-            if type(enderecoOrigem) == float:
-                y.loc[i, 'Source address'] = 'any'
-
-            if type(enderecoDestino) == float:
-                y.loc[i, 'Destination address'] = 'any'
-
-        results = {
-            'Receive Time': y['Receive Time'],
-            'Source Address': y['Source address'],
-            'Destination Address': y['Destination address'],
-            'Source Zone': y['Source Zone'],
-            'Destination Zone': y['Destination Zone'],
-            'Destination Port': y['Destination Port'],
-            'Threat/Content Name': y['Threat/Content Name'],
-            'Severity': y['Severity'],
-            'thr_category': y['thr_category'],
-            'Destination User': y['Destination User'],
-            'Source User': y['Source User'],
-            'Rule': y['Rule'],
-            'Application': y['Application'],
-            'Direction': y['Direction']
-        }
-
-        arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/teste/testeThreats.csv'
-        stringP = pd.DataFrame(results, columns=['Receive Time', 'Source Address', 'Destination Address',
-                                                 'Source Zone', 'Destination Zone', 'Destination Port',
-                                                 'Threat/Content Name', 'Severity', 'thr_category',
-                                                 'Destination User', 'Source User', 'Rule',
-                                                 'Application', 'Direction', 'clusters', 'False Positive'])
-
-        stringP.to_csv(arquivoOutput)
-        stringP = stringP.transpose()
-        file = file.transpose()
-
-        X_train, X_test, y_train, y_test = train_test_split(file, stringP, test_size=0.3, random_state=0)
+        print(x)
+        exit()
+        X_train, X_test, y_train, y_test = train_test_split(x, y, train_size=0.7, test_size=0.3)
         result = DecisionTreeClassifier(criterion='gini', max_depth=3, random_state=0)
         result.fit(X_train, y_train)
-        result.predict(X_train)
+        y_pred = result.predict(X_train)
 
         '''dot_data = tree.export_graphviz(result, out_file=None,
                                         feature_names=file.values,
