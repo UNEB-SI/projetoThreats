@@ -6,7 +6,7 @@ import os
 from sklearn import preprocessing
 from sklearn.cluster import KMeans
 from sklearn.ensemble import ExtraTreesClassifier
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import DecisionTreeClassifier, export
 from sklearn import tree
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
@@ -18,7 +18,7 @@ from kmodes.kmodes import KModes
 from kmodes.kprototypes import KPrototypes
 from xml.etree import ElementTree as et
 from matplotlib import style
-
+from sklearn.metrics import confusion_matrix, accuracy_score
 
 class View(object):
 
@@ -150,42 +150,69 @@ class View(object):
 
     def classificador(self, file):
 
-        colunas = file.columns.drop('False Positive')
+        file = file.drop(['Receive Time'], axis=1)
         le = preprocessing.LabelEncoder()
-        x = file[colunas].values
-        y = le.fit_transform(file['False Positive'])
-        tamDF = colunas.size
+        previsores = file.iloc[:,1:16].values
+        classes = file.iloc[:,17].values
 
-        for i in range(tamDF):
-            print(i)
-            print(x[i])
-            x[i] = le.fit_transform(file[colunas[i]].values)
-            print(x[i])
-            exit()
+        previsores[:,0] = le.fit_transform(previsores[:,0])
+        previsores[:,1] = le.fit_transform(previsores[:,1])
+        previsores[:,2] = le.fit_transform(previsores[:,2])
+        previsores[:,3] = le.fit_transform(previsores[:,3])
+        previsores[:,4] = le.fit_transform(previsores[:,4])
+        previsores[:,5] = le.fit_transform(previsores[:,5])
+        previsores[:,6] = le.fit_transform(previsores[:,6])
+        previsores[:,7] = le.fit_transform(previsores[:,7])
+        previsores[:,8] = le.fit_transform(previsores[:,8].astype(str))
+        previsores[:,9] = le.fit_transform(previsores[:,9].astype(str))
+        previsores[:,10] = le.fit_transform(previsores[:,10].astype(str))
+        previsores[:,11] = le.fit_transform(previsores[:,11].astype(str))
+        previsores[:,12] = le.fit_transform(previsores[:,12].astype(str))
+        previsores[:,13] = le.fit_transform(previsores[:,13].astype(str))
+        previsores[:,14] = le.fit_transform(previsores[:,14])
 
-        print(x)
-        exit()
-        X_train, X_test, y_train, y_test = train_test_split(x, y, train_size=0.7, test_size=0.3)
-        result = DecisionTreeClassifier(criterion='gini', max_depth=3, random_state=0)
-        result.fit(X_train, y_train)
-        y_pred = result.predict(X_train)
+        scaler = preprocessing.StandardScaler()
+        previsores = scaler.fit_transform(previsores)
 
-        '''dot_data = tree.export_graphviz(result, out_file=None,
-                                        feature_names=file.values,
-                                        class_names=file.columns,
-                                        filled=True, rounded=True,
+
+        previsores_treinamento, previsores_teste, classe_treinamento, classe_teste = train_test_split(previsores,
+                                                                                                      classes,
+                                                                                                      test_size=0.25,
+                                                                                                      random_state=0)
+        classificador = DecisionTreeClassifier(criterion='entropy', random_state=0)
+        classificador.fit(previsores_treinamento, classe_treinamento)
+        previsoes = classificador.predict(previsores_teste)
+
+        precisao = accuracy_score(classe_teste, previsoes)
+        matriz = confusion_matrix(classe_teste, previsoes)
+
+        print(precisao)
+        print(matriz)
+
+        dot_data = export.export_graphviz(classificador,
+                                        out_file=None,
+                                        feature_names= ['Source Address',
+                                                     'Destination Address',
+                                                     'Source Zone', 'Destination Zone', 'Destination Port',
+                                                     'Threat/Content Name', 'Severity',
+                                                     'thr_category', 'Destination User', 'Source User', 'Rule',
+                                                     'Application', 'Direction','Date','Hours'],
+                                        class_names=['yes', 'no'],
+                                        filled=True,
+                                        leaves_parallel=True,
                                         special_characters=True)
         graph = graphviz.Source(dot_data)
-        graph.render("file", view=True)'''
+        graph.render("file", view=True)
+        exit()
 
         # result.predict(X_test)
 
-        # prev = tree.predict(X_test)'''
+        # prev = tree.predict(X_test)
 
-        X_combined = np.vstack((X_train, X_test))
+        ''' X_combined = np.vstack((X_train, X_test))
         y_combined = np.hstack((y_train, y_test))
 
-        self.plot_decision_regions(X_combined, y_combined, classifier=result, test_idx=range(105, 150))
+        self.plot_decision_regions(X_combined, y_combined, classifier=result, test_idx=range(105, 150))'''
 
         '''plt.xlabel('petal length [cm]')
         plt.ylabel('petal width [cm]')
@@ -244,6 +271,7 @@ class View(object):
         plt.show()'''
 
     def padronizarDados(self, file):
+
         # style.use("ggplot")
         caminho = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/Novos/trainThreats.csv'
         colors = ['b', 'orange', 'g', 'r', 'c', 'm', 'y', 'k', 'Brown', 'ForestGreen']
@@ -251,10 +279,13 @@ class View(object):
         syms = np.genfromtxt(caminho, dtype=str, delimiter=',', skip_header=1)[:, 8]
         X = np.genfromtxt(caminho, dtype=object, delimiter=',', skip_header=1)[:, 1:]
 
-        kproto = KPrototypes(n_clusters=5, init='Cao', verbose=2, gamma=None)
+        kproto = KPrototypes(n_clusters=5, init='Huang', verbose=2, gamma=None)
         clusters = kproto.fit_predict(X, categorical=[0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13])
 
+        file['date'], file['hours'] = zip(*file['Receive Time'].map(lambda x: x.split(' ')))
+        file.drop(columns=['Receive Time'])
         file['clusters'] = clusters
+
 
         # Print cluster centroids of the trained model.
         print(kproto.cluster_centroids_)
@@ -316,46 +347,6 @@ class View(object):
 
         # self.classificador(kproto.cluster_centroids_, sortedR) #primeiro argumento serão as features e o segundo argumento serão as classes
 
-        '''le = preprocessing.LabelEncoder()
-        file = file.apply(preprocessing.LabelEncoder().fit_transform)
-        scaler = preprocessing.StandardScaler()
-        new = scaler.fit_transform(file)
-
-        x = file.values
-        y = file.columns
-
-        #variaveis quantitativas nominal, pois nao precisa de uma ordem
-        #teste não paramétricos (qui - quadrado)
-        #features são os valores , caracterisiticas, e classes são  strings que caractreiza um valor da feature
-
-        x = x.transpose()
-        clf = ExtraTreesClassifier()
-        clf.fit(x, y)
-        clf.feature_importances_
-
-        model = SelectFromModel(clf, prefit=True)
-        X_new = model.transform(x)
-        X_new.shape
-        X_new = X_new.transpose()
-        
-
-        features = file.columns.difference(['Class'])
-        print(file['Class'])
-        exit()
-
-
-        features_importance = zip(clf.feature_importances_, features)
-        for importance, feature in sorted(features_importance):
-            print("%s: %f%%" % (feature, importance * 100))
-
-        exit()
-
-
-
-        self.metodoElbow(new)
-
-        k = 10
-        self.encontrarSimilaridade(k,new, tipo, file)'''
         self.lerXML(file)
 
     def lerXML(self, file):
