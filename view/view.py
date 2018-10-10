@@ -7,7 +7,6 @@ from sklearn import preprocessing
 from sklearn.cluster import KMeans
 from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.tree import DecisionTreeClassifier, export
-from sklearn import tree
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 import numpy as np
@@ -91,6 +90,7 @@ class View(object):
                 'Destination Address': df['Destination address'],
                 'Source Zone': df['Source Zone'],
                 'Destination Zone': df['Destination Zone'],
+                'Source Port': df['Source Port'],
                 'Destination Port': df['Destination Port'],
                 'Threat/Content Name': df['Threat/Content Name'],
                 'Severity': df['Severity'],
@@ -104,12 +104,13 @@ class View(object):
 
             arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/Novos/trainThreats.csv'
             stringP = pd.DataFrame(results, columns=['Receive Time', 'Source Address',
-                                                     'Destination Address',
-                                                     'Source Zone', 'Destination Zone', 'Destination Port',
-                                                     'Threat/Content Name', 'Severity',
-                                                     'thr_category', 'Destination User', 'Source User', 'Rule',
-                                                     'Application', 'Direction'])
+                                                     'Destination Address', 'Source Zone', 'Destination Zone',
+                                                     'Source Port', 'Destination Port', 'Threat/Content Name',
+                                                     'Severity', 'thr_category', 'Destination User', 'Source User',
+                                                     'Rule', 'Application', 'Direction'])
 
+            stringP['Date'], stringP['Hours'] = zip(*stringP['Receive Time'].map(lambda x: x.split(' ')))
+            stringP = stringP.drop(['Receive Time'], axis=1)
             stringP.to_csv(arquivoOutput)
             self.padronizarDados(stringP)
 
@@ -150,37 +151,39 @@ class View(object):
 
     def classificador(self, file):
 
-        file = file.drop(['Receive Time'], axis=1)
         le = preprocessing.LabelEncoder()
-        previsores = file.iloc[:,1:16].values
-        classes = file.iloc[:,17].values
+        previsores = file.iloc[:, 1:18].values
+        classes = file.iloc[:, 18].values
+        classes = classes.astype(str)
 
-        previsores[:,0] = le.fit_transform(previsores[:,0])
-        previsores[:,1] = le.fit_transform(previsores[:,1])
-        previsores[:,2] = le.fit_transform(previsores[:,2])
-        previsores[:,3] = le.fit_transform(previsores[:,3])
-        previsores[:,4] = le.fit_transform(previsores[:,4])
-        previsores[:,5] = le.fit_transform(previsores[:,5])
-        previsores[:,6] = le.fit_transform(previsores[:,6])
-        previsores[:,7] = le.fit_transform(previsores[:,7])
-        previsores[:,8] = le.fit_transform(previsores[:,8].astype(str))
-        previsores[:,9] = le.fit_transform(previsores[:,9].astype(str))
-        previsores[:,10] = le.fit_transform(previsores[:,10].astype(str))
-        previsores[:,11] = le.fit_transform(previsores[:,11].astype(str))
-        previsores[:,12] = le.fit_transform(previsores[:,12].astype(str))
-        previsores[:,13] = le.fit_transform(previsores[:,13].astype(str))
-        previsores[:,14] = le.fit_transform(previsores[:,14])
+        previsores[:, 0] = le.fit_transform(previsores[:, 0])
+        previsores[:, 1] = le.fit_transform(previsores[:, 1])
+        previsores[:, 2] = le.fit_transform(previsores[:, 2])
+        previsores[:, 3] = le.fit_transform(previsores[:, 3])
+        previsores[:, 4] = le.fit_transform(previsores[:, 4])
+        previsores[:, 5] = le.fit_transform(previsores[:, 5])
+        previsores[:, 6] = le.fit_transform(previsores[:, 6])
+        previsores[:, 7] = le.fit_transform(previsores[:, 7])
+        previsores[:, 8] = le.fit_transform(previsores[:, 8])
+        previsores[:, 9] = le.fit_transform(previsores[:, 9].astype(str))
+        previsores[:, 10] = le.fit_transform(previsores[:, 10].astype(str))
+        previsores[:, 11] = le.fit_transform(previsores[:, 11])
+        previsores[:, 12] = le.fit_transform(previsores[:, 12])
+        previsores[:, 13] = le.fit_transform(previsores[:, 13])
+        previsores[:, 14] = le.fit_transform(previsores[:, 14])
+        previsores[:, 15] = le.fit_transform(previsores[:, 15])
+        previsores[:, 16] = le.fit_transform(previsores[:, 16])
+
 
         scaler = preprocessing.StandardScaler()
         previsores = scaler.fit_transform(previsores)
-
-
         previsores_treinamento, previsores_teste, classe_treinamento, classe_teste = train_test_split(previsores,
                                                                                                       classes,
                                                                                                       test_size=0.25,
                                                                                                       random_state=0)
-        classificador = DecisionTreeClassifier(criterion='entropy', random_state=0)
+        classificador = DecisionTreeClassifier(criterion="gini", random_state = 100, max_depth=3, min_samples_leaf=5)
         classificador.fit(previsores_treinamento, classe_treinamento)
+        #print(classificador.feature_importances_)
         previsoes = classificador.predict(previsores_teste)
 
         precisao = accuracy_score(classe_teste, previsoes)
@@ -193,28 +196,24 @@ class View(object):
                                         out_file=None,
                                         feature_names= ['Source Address',
                                                      'Destination Address',
-                                                     'Source Zone', 'Destination Zone', 'Destination Port',
+                                                     'Source Zone', 'Destination Zone',
+                                                     'Source Port', 'Destination Port',
                                                      'Threat/Content Name', 'Severity',
                                                      'thr_category', 'Destination User', 'Source User', 'Rule',
-                                                     'Application', 'Direction','Date','Hours'],
+                                                     'Application', 'Direction','Date','Hours', 'Clusters'],
                                         class_names=['yes', 'no'],
                                         filled=True,
                                         leaves_parallel=True,
                                         special_characters=True)
         graph = graphviz.Source(dot_data)
         graph.render("file", view=True)
-        exit()
 
-        # result.predict(X_test)
+        '''X_combined = np.vstack((previsores_treinamento, previsores_teste))
+        y_combined = np.hstack((classe_treinamento, classe_teste))
 
-        # prev = tree.predict(X_test)
+        self.plot_decision_regions(X_combined, y_combined, classifier=classificador, test_idx=range(105, 150))
 
-        ''' X_combined = np.vstack((X_train, X_test))
-        y_combined = np.hstack((y_train, y_test))
-
-        self.plot_decision_regions(X_combined, y_combined, classifier=result, test_idx=range(105, 150))'''
-
-        '''plt.xlabel('petal length [cm]')
+        plt.xlabel('petal length [cm]')
         plt.ylabel('petal width [cm]')
         plt.legend(loc='upper left')
         plt.show()
@@ -273,18 +272,30 @@ class View(object):
     def padronizarDados(self, file):
 
         # style.use("ggplot")
+        arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/new.csv'
+        x = pd.read_csv(arquivoOutput)
+        self.classificador(x)
         caminho = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/Novos/trainThreats.csv'
         colors = ['b', 'orange', 'g', 'r', 'c', 'm', 'y', 'k', 'Brown', 'ForestGreen']
         # Data points with their publisher name,category score, category name, place name
-        syms = np.genfromtxt(caminho, dtype=str, delimiter=',', skip_header=1)[:, 8]
+        category = np.genfromtxt(caminho, dtype=str, delimiter=',', skip_header=1)[:, 9]  # categoria
+        severity = np.genfromtxt(caminho, dtype=str, delimiter=',', skip_header=1)[:, 8]  # severidade
         X = np.genfromtxt(caminho, dtype=object, delimiter=',', skip_header=1)[:, 1:]
 
-        kproto = KPrototypes(n_clusters=5, init='Huang', verbose=2, gamma=None)
-        clusters = kproto.fit_predict(X, categorical=[0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13])
+        kproto = KPrototypes(n_clusters=5, init='Cao', verbose=2)
+        clusters = kproto.fit_predict(X, categorical=[0, 1, 2, 3, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
 
-        file['date'], file['hours'] = zip(*file['Receive Time'].map(lambda x: x.split(' ')))
-        file.drop(columns=['Receive Time'])
-        file['clusters'] = clusters
+        '''plt.scatter(X[clusters == 0, 8], X[clusters == 0, 9], c='red', alpha=0.8, s=30, label='Cluster 0')
+        plt.scatter(X[clusters == 1, 8], X[clusters == 1, 9], c='orange', alpha=0.8, s=30, label='Cluster 1')
+        plt.scatter(X[clusters == 2, 8], X[clusters == 2, 9], c='green', alpha=0.8, s=30, label='Cluster 2')
+        plt.scatter(X[clusters == 3, 8], X[clusters == 3, 9], c='blue', alpha=0.8, s=30, label='Cluster 3')
+        plt.scatter(X[clusters == 4, 8], X[clusters == 4, 9], c='purple', alpha=0.8, s=30, label='Cluster 4')
+        plt.xlabel('Severidade')
+        plt.ylabel('Categoria')
+        plt.legend()
+        plt.show()'''
+
+        file['Clusters'] = clusters
 
 
         # Print cluster centroids of the trained model.
@@ -293,36 +304,55 @@ class View(object):
         print(kproto.cost_)
         print(kproto.n_iter_)
 
-        for s, c in zip(syms, clusters):
-            print("Result: {}, cluster:{}".format(s, c))
+
+
+        '''for cat, sev, c in zip(category, severity, clusters):
+            print("Result Categoria: {}, Result Severidade: {}, cluster:{}".format(cat, sev, c))
 
         my_dpi = 96
         fig = plt.figure(figsize=(800 / my_dpi, 800 / my_dpi), dpi=my_dpi)
         ax = fig.add_subplot(1, 1, 1)
+
+        categorias = []
+        severidades = []
+
         newClusters = []
         newSyms = []
         newClusters.append(clusters)
 
         le = preprocessing.LabelEncoder()
-        syms_ = le.fit_transform(syms)
-        newSyms.append(syms)
+        cats_ = le.fit_transform(category)
+        categorias.append(cats_)
 
-        scatter = ax.scatter(X[:, 0], X[:, 1], c=clusters, s=50, cmap='viridis')
+        sevs = le.fit_transform(severity)
+        severidades.append(sevs)
 
-        '''dadosAgrupados = zip(newSyms, newClusters)
+        #scatter = ax.scatter(X[:, 0], X[:, 1], c=clusters, s=50, cmap='viridis')
+
+        dadosAgrupados = zip(severidades, categorias)
         for data in dadosAgrupados:
             x, y = data
-            scatter = ax.scatter(x, y, alpha=0.8, c=clusters, edgecolors='none', s=100)
+            scatter = ax.scatter(clusters[:,0], clusters[:,1], alpha=0.8, c=clusters, edgecolors='none', s=30)
+
+            plt.scatter(dadosTransformados[:, 0], dadosTransformados[:, 1], s=100, c=kmeans.labels_)
+                   plt.scatter(kmeans.cluster_centers_[:, 0], kmeans.cluster_centers_[:, 1], s=300, c='black', label='Centroids')
+                   plt.title(tipo + ' Clusters and Centroids')
+                   plt.xlabel('SepalLength')
+                   plt.ylabel('SepalWidth')
+                   plt.legend()
+                   plt.show()
 
         plt.title('K-Prototypes Clustering')
         ax.set_xlabel('Severity')
         ax.set_ylabel('Clusters')
         plt.colorbar(scatter)
         ax.set_title('Data points classifed according to known centers')
-        plt.show()'''
+        plt.show()
+
+        exit()
 
         # Plot the results
-        '''for i in set(kproto.labels_):
+        for i in set(kproto.labels_):
             index = kproto.labels_ == i
             plt.plot(X[index, 0], X[index, 1], 'o')
             plt.suptitle('Data points categorized with category score', fontsize=18)
@@ -427,15 +457,14 @@ class View(object):
                                 (row["Application"] in regras[i]['application_']) and (
                                         row['Source User'] in regras[i]['source-user_']) and
                                         (row["Source Address"] != "any") or (row['Destination Zone'] != "any")):
-                            file.loc[index, 'False Positive'] = 'yes'
+                            file.loc[index, 'False Positive'] = 'yes' #equivale a sim
                         else:
                             file.loc[index, 'False Positive'] = 'no'
                     else:
-                        file.loc[index, 'False Positive'] = 'no'
+                        file.loc[index, 'False Positive'] = 'no' #equivale a nao
 
         arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/new.csv'
         file.to_csv(arquivoOutput)
-
         self.classificador(file)
 
 
