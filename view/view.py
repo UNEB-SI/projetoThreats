@@ -152,8 +152,8 @@ class View(object):
     def classificador(self, file):
 
         le = preprocessing.LabelEncoder()
-        previsores = file.iloc[:, 1:18].values
-        classes = file.iloc[:, 18].values
+        previsores = file.iloc[:, 0:17].values
+        classes = file.iloc[:, 17].values
         classes = classes.astype(str)
 
         previsores[:, 0] = le.fit_transform(previsores[:, 0])
@@ -172,8 +172,6 @@ class View(object):
         previsores[:, 13] = le.fit_transform(previsores[:, 13])
         previsores[:, 14] = le.fit_transform(previsores[:, 14])
         previsores[:, 15] = le.fit_transform(previsores[:, 15])
-        previsores[:, 16] = le.fit_transform(previsores[:, 16])
-
 
         scaler = preprocessing.StandardScaler()
         previsores = scaler.fit_transform(previsores)
@@ -181,7 +179,7 @@ class View(object):
                                                                                                       classes,
                                                                                                       test_size=0.25,
                                                                                                       random_state=0)
-        classificador = DecisionTreeClassifier(criterion="gini", random_state = 100, max_depth=3, min_samples_leaf=5)
+        classificador = DecisionTreeClassifier(criterion="entropy", random_state=0, max_depth=None, min_samples_leaf=5)
         classificador.fit(previsores_treinamento, classe_treinamento)
         #print(classificador.feature_importances_)
         previsoes = classificador.predict(previsores_teste)
@@ -192,21 +190,21 @@ class View(object):
         print(precisao)
         print(matriz)
 
-        dot_data = export.export_graphviz(classificador,
+        '''dot_data = export.export_graphviz(classificador,
                                         out_file=None,
-                                        feature_names= ['Source Address',
+                                        feature_names=['Source Address',
                                                      'Destination Address',
                                                      'Source Zone', 'Destination Zone',
                                                      'Source Port', 'Destination Port',
                                                      'Threat/Content Name', 'Severity',
                                                      'thr_category', 'Destination User', 'Source User', 'Rule',
-                                                     'Application', 'Direction','Date','Hours', 'Clusters'],
+                                                     'Application', 'Direction', 'Date', 'Hours', 'Clusters'],
                                         class_names=['yes', 'no'],
-                                        filled=True,
+                                        filled=True, rounded=True,
                                         leaves_parallel=True,
                                         special_characters=True)
         graph = graphviz.Source(dot_data)
-        graph.render("file", view=True)
+        graph.render("file", view=True)'''
 
         '''X_combined = np.vstack((previsores_treinamento, previsores_teste))
         y_combined = np.hstack((classe_treinamento, classe_teste))
@@ -272,9 +270,6 @@ class View(object):
     def padronizarDados(self, file):
 
         # style.use("ggplot")
-        arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/new.csv'
-        x = pd.read_csv(arquivoOutput)
-        self.classificador(x)
         caminho = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/Novos/trainThreats.csv'
         colors = ['b', 'orange', 'g', 'r', 'c', 'm', 'y', 'k', 'Brown', 'ForestGreen']
         # Data points with their publisher name,category score, category name, place name
