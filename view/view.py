@@ -50,7 +50,7 @@ class View(object):
         with open(nomeArquivo, 'r', encoding='utf-8') as arquivo:
             df = pd.read_csv(arquivo)
 
-            # df['Receive Time'] = pd.to_datetime(df['Receive Time'])
+            df['Receive Time'] = pd.to_datetime(df['Receive Time'])
 
             for i in range(df['Destination User'].count()):
                 destino = df['Destination User'][i]
@@ -88,21 +88,13 @@ class View(object):
                 'Direction': df['Direction']
             }
 
-            arquivoOutput = 'C:/Users/stephl05/Desktop/projetoAplicativo/trainThreats.csv'
+            arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/Novos/trainThreats.csv'
             stringP = pd.DataFrame(results, columns=['Receive Time', 'Source Address',
                                                      'Destination Address', 'Source Zone', 'Destination Zone',
                                                      'Source Port', 'Destination Port', 'Threat/Content Name',
                                                      'Severity', 'thr_category', 'Destination User', 'Source User',
                                                      'Rule', 'Application', 'Direction'])
 
-            stringP['Date'], stringP['Time'] = zip(*stringP['Receive Time'].map(lambda x: x.split(' ')))
-            stringP['Date'] = pd.to_datetime(stringP['Date'])
-            stringP['Time'] = pd.to_datetime(stringP['Time'])
-
-            # stringP['Time'] = stringP['Receive Time'].dt.time
-            # stringP['Date'] = stringP['Receive Time'].dt.date
-
-            stringP = stringP.drop(['Receive Time'], axis=1)
             stringP.to_csv(arquivoOutput)
             self.padronizarDados(stringP)
 
@@ -112,42 +104,32 @@ class View(object):
     def classificador(self, file):
 
         le = preprocessing.LabelEncoder()
-        previsores = file.iloc[:, 0:17].values
-        classes = file.iloc[:, 17].values
+        previsores = file.iloc[:, 0:16].values
+        classes = file.iloc[:, 16].values
         classes = classes.astype(str)
 
-        previsores[:, 0] = le.fit_transform(previsores[:, 0])
+        #previsores[:, 0] = le.fit_transform(previsores[:, 0])
         previsores[:, 1] = le.fit_transform(previsores[:, 1])
         previsores[:, 2] = le.fit_transform(previsores[:, 2])
         previsores[:, 3] = le.fit_transform(previsores[:, 3])
         previsores[:, 4] = le.fit_transform(previsores[:, 4])
-        previsores[:, 5] = le.fit_transform(previsores[:, 5])
-        previsores[:, 6] = le.fit_transform(previsores[:, 6])
+        #previsores[:, 5] = le.fit_transform(previsores[:, 5])
+        #previsores[:, 6] = le.fit_transform(previsores[:, 6])
         previsores[:, 7] = le.fit_transform(previsores[:, 7])
         previsores[:, 8] = le.fit_transform(previsores[:, 8])
-        previsores[:, 9] = le.fit_transform(previsores[:, 9].astype(str))
+        previsores[:, 9] = le.fit_transform(previsores[:, 9])
         previsores[:, 10] = le.fit_transform(previsores[:, 10].astype(str))
-        previsores[:, 11] = le.fit_transform(previsores[:, 11])
+        previsores[:, 11] = le.fit_transform(previsores[:, 11].astype(str))
         previsores[:, 12] = le.fit_transform(previsores[:, 12])
         previsores[:, 13] = le.fit_transform(previsores[:, 13])
+        previsores[:, 14] = le.fit_transform(previsores[:, 14])
 
-        previsores[:, 14] = pd.to_datetime(previsores[:, 14]).astype('int64')
-        max_a = file['Time'].max()
-        min_a = file['Time'].min()
+        previsores[:, 0] = pd.to_datetime(previsores[:, 0]).astype('int64')
+        max_a = previsores[:, 0].max()
+        min_a = previsores[:, 0].min()
         min_norm = -1
         max_norm = 1
-        previsores[:, 14] = (file['Time'] - min_a) * (max_norm - min_norm) / (max_a - min_a) + min_norm
-
-        previsores[:, 15] = pd.to_datetime(previsores[:, 15]).astype('int64')
-        max_a_ = file['Date'].max()
-        min_a_ = file['Date'].min()
-        min_norm_ = -1
-        max_norm_ = 1
-        previsores[:, 15] = (file['Date'] - min_a_) * (max_norm_ - min_norm_) / (max_a_ - min_a_) + min_norm_
-
-        print(previsores[:, 14])
-        print(previsores[:, 15])
-        exit()
+        previsores[:, 0] = (previsores[:, 0] - min_a) * (max_norm - min_norm) / (max_a - min_a) + min_norm
 
         scaler = preprocessing.StandardScaler()
         previsores = scaler.fit_transform(previsores)
@@ -157,7 +139,7 @@ class View(object):
                                                                                                       random_state=0)
         classificador = DecisionTreeClassifier(criterion="entropy", random_state=0, max_depth=None, min_samples_leaf=5)
         classificador.fit(previsores_treinamento, classe_treinamento)
-        # print(classificador.feature_importances_)
+        print(classificador.feature_importances_)
         previsoes = classificador.predict(previsores_teste)
 
         precisao = accuracy_score(classe_teste, previsoes)
@@ -168,19 +150,20 @@ class View(object):
 
         dot_data = export.export_graphviz(classificador,
                                           out_file=None,
-                                          feature_names=['Source Address',
+                                          feature_names=['Receive Time','Source Address',
                                                          'Destination Address',
                                                          'Source Zone', 'Destination Zone',
                                                          'Source Port', 'Destination Port',
                                                          'Threat/Content Name', 'Severity',
                                                          'thr_category', 'Destination User', 'Source User', 'Rule',
-                                                         'Application', 'Direction', 'Date', 'Hours', 'Clusters'],
+                                                         'Application', 'Direction', 'Clusters'],
                                           class_names=classes,
                                           filled=True, rounded=True,
                                           leaves_parallel=True,
                                           special_characters=True)
         graph = graphviz.Source(dot_data)
         graph.render("file", view=True)
+        exit()
 
     def padronizarDados(self, file):
 
@@ -193,7 +176,8 @@ class View(object):
         X = np.genfromtxt(caminho, dtype=object, delimiter=',', skip_header=1)[:, 1:]
 
         kproto = KPrototypes(n_clusters=5, init='Cao', verbose=2)
-        clusters = kproto.fit_predict(X, categorical=[0, 1, 2, 3, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
+        #clusters = kproto.fit_predict(X, categorical=[0, 1, 2, 3, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
+        clusters = kproto.fit_predict(X, categorical=[0, 1, 2, 3, 4, 7, 8, 9, 10, 11, 12, 13,14])
 
         '''plt.scatter(X[clusters == 0, 8], X[clusters == 0, 9], c='red', alpha=0.8, s=30, label='Cluster 0')
         plt.scatter(X[clusters == 1, 8], X[clusters == 1, 9], c='orange', alpha=0.8, s=30, label='Cluster 1')
