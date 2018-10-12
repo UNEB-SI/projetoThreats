@@ -12,6 +12,7 @@ import graphviz
 from kmodes.kprototypes import KPrototypes
 from xml.etree import ElementTree as et
 from sklearn.metrics import confusion_matrix, accuracy_score
+from sklearn.naive_bayes import GaussianNB
 
 class View(object):
 
@@ -96,25 +97,25 @@ class View(object):
                                                      'Rule', 'Application', 'Direction'])
 
             stringP.to_csv(arquivoOutput)
-            self.padronizarDados(stringP)
+            self.agruparDados(stringP)
 
     def About(self):
         print("This is a simple example of a menu")
 
-    def classificador(self, file):
+    def padronizarDados(self, file):
 
         le = preprocessing.LabelEncoder()
         previsores = file.iloc[:, 0:16].values
         classes = file.iloc[:, 16].values
         classes = classes.astype(str)
 
-        #previsores[:, 0] = le.fit_transform(previsores[:, 0])
+        # previsores[:, 0] = le.fit_transform(previsores[:, 0])
         previsores[:, 1] = le.fit_transform(previsores[:, 1])
         previsores[:, 2] = le.fit_transform(previsores[:, 2])
         previsores[:, 3] = le.fit_transform(previsores[:, 3])
         previsores[:, 4] = le.fit_transform(previsores[:, 4])
-        #previsores[:, 5] = le.fit_transform(previsores[:, 5])
-        #previsores[:, 6] = le.fit_transform(previsores[:, 6])
+        # previsores[:, 5] = le.fit_transform(previsores[:, 5])
+        # previsores[:, 6] = le.fit_transform(previsores[:, 6])
         previsores[:, 7] = le.fit_transform(previsores[:, 7])
         previsores[:, 8] = le.fit_transform(previsores[:, 8])
         previsores[:, 9] = le.fit_transform(previsores[:, 9])
@@ -133,6 +134,36 @@ class View(object):
 
         scaler = preprocessing.StandardScaler()
         previsores = scaler.fit_transform(previsores)
+
+
+
+        return previsores, classes
+
+    def ClassifierNaiveBayes(self, file):
+        previsores, classes = self.padronizarDados(file)
+
+        previsores_treinamento, previsores_teste, classe_treinamento, classe_teste = train_test_split(previsores,
+                                                                                                      classes,
+                                                                                                      test_size=0.25,
+                                                                                                      random_state=0)
+        classificador = GaussianNB()
+        classificador.fit(previsores_treinamento, classe_treinamento)
+        previsoes = classificador.predict(previsores_teste)
+
+        precisao = accuracy_score(classe_teste, previsoes)
+        matriz = confusion_matrix(classe_teste, previsoes)
+
+        print(classificador.class_prior_)
+
+        print(precisao)
+        print(matriz)
+        exit()
+
+
+
+    def ClassifierDecicionTree(self, file):
+
+        previsores, classes = self.padronizarDados(file)
         previsores_treinamento, previsores_teste, classe_treinamento, classe_teste = train_test_split(previsores,
                                                                                                       classes,
                                                                                                       test_size=0.25,
@@ -165,7 +196,7 @@ class View(object):
         graph.render("file", view=True)
         exit()
 
-    def padronizarDados(self, file):
+    def agruparDados(self, file):
 
         # style.use("ggplot")
         caminho = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/Novos/trainThreats.csv'
@@ -286,7 +317,8 @@ class View(object):
 
         arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/new.csv'
         file.to_csv(arquivoOutput)
-        self.classificador(file)
+        self.ClassifierNaiveBayes(file)
+        #self.ClassifierDecicionTree(file)
 
 
 root = Tk()
