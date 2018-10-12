@@ -13,6 +13,7 @@ from kmodes.kprototypes import KPrototypes
 from xml.etree import ElementTree as et
 from sklearn.metrics import confusion_matrix, accuracy_score
 from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
 
 class View(object):
 
@@ -102,6 +103,13 @@ class View(object):
     def About(self):
         print("This is a simple example of a menu")
 
+    def metricas(self, classe_teste, previsoes):
+        precisao = accuracy_score(classe_teste, previsoes)
+        matriz = confusion_matrix(classe_teste, previsoes)
+
+        print(precisao)
+        print(matriz)
+
     def padronizarDados(self, file):
 
         le = preprocessing.LabelEncoder()
@@ -134,51 +142,45 @@ class View(object):
 
         scaler = preprocessing.StandardScaler()
         previsores = scaler.fit_transform(previsores)
-
-
-
         return previsores, classes
+
+    def ClassifierKNN(self, file):
+        previsores, classes = self.padronizarDados(file)
+        previsores_treinamento, previsores_teste, classe_treinamento, classe_teste = \
+            train_test_split(previsores, classes, test_size=0.25,random_state=0)
+
+        classificador = KNeighborsClassifier(metric='minkowski', p=2)
+        classificador.fit(previsores_treinamento, classe_treinamento)
+        previsoes = classificador.predict(previsores_teste)
+
+        self.metricas(classe_teste, previsoes)
+        exit()
 
     def ClassifierNaiveBayes(self, file):
         previsores, classes = self.padronizarDados(file)
 
-        previsores_treinamento, previsores_teste, classe_treinamento, classe_teste = train_test_split(previsores,
-                                                                                                      classes,
-                                                                                                      test_size=0.25,
-                                                                                                      random_state=0)
+        previsores_treinamento, previsores_teste, classe_treinamento, classe_teste = \
+            train_test_split(previsores, classes, test_size=0.25,random_state=0)
         classificador = GaussianNB()
         classificador.fit(previsores_treinamento, classe_treinamento)
         previsoes = classificador.predict(previsores_teste)
-
-        precisao = accuracy_score(classe_teste, previsoes)
-        matriz = confusion_matrix(classe_teste, previsoes)
-
         print(classificador.class_prior_)
 
-        print(precisao)
-        print(matriz)
+        self.metricas(classe_teste, previsoes)
         exit()
-
-
 
     def ClassifierDecicionTree(self, file):
 
         previsores, classes = self.padronizarDados(file)
-        previsores_treinamento, previsores_teste, classe_treinamento, classe_teste = train_test_split(previsores,
-                                                                                                      classes,
-                                                                                                      test_size=0.25,
-                                                                                                      random_state=0)
+        previsores_treinamento, previsores_teste, classe_treinamento, classe_teste = \
+            train_test_split(previsores,classes, test_size=0.25,random_state=0)
+
         classificador = DecisionTreeClassifier(criterion="entropy", random_state=0, max_depth=None, min_samples_leaf=5)
         classificador.fit(previsores_treinamento, classe_treinamento)
         print(classificador.feature_importances_)
         previsoes = classificador.predict(previsores_teste)
 
-        precisao = accuracy_score(classe_teste, previsoes)
-        matriz = confusion_matrix(classe_teste, previsoes)
-
-        print(precisao)
-        print(matriz)
-
+        self.metricas(classe_teste, previsoes)
         dot_data = export.export_graphviz(classificador,
                                           out_file=None,
                                           feature_names=['Receive Time','Source Address',
@@ -304,11 +306,17 @@ class View(object):
         for index, row in file.iterrows():
             for i in range(tamRegras):
                 if row["Rule"] == regras[i]['name']:
-                    if row["Severity"] != "critical" and row["Severity"] != "high":
+                    if row["Severity"] != "critical" : #and row["Severity"] != "high"
                         if ((row["Source Zone"] != "CORPORATIVA") and (row['Destination Zone'] == "CORPORATIVA") and
-                                (row["Application"] in regras[i]['application_']) and (
-                                        row['Source User'] in regras[i]['source-user_']) and
-                                        (row["Source Address"] != "any") or (row['Destination Zone'] != "any")):
+                                (row["Application"] in regras[i]['application_'])):
+                            file.loc[index, 'False Positive'] = 'yes'
+                        elif((row["Source Zone"] != "CORPORATIVA") and (row['Destination Zone'] != "CORPORATIVA") and
+                                (row["Application"] in regras[i]['application_'])):
+                            file.loc[index, 'False Positive'] = 'yes'
+                        else:
+                            file.loc[index, 'False Positive'] = 'no'
+                        if((row['Source User'] in regras[i]['source-user_']) and (row["Source Address"] != "any") and
+                                (row['Destination Address'] != "any")):
                             file.loc[index, 'False Positive'] = 'yes' #equivale a sim
                         else:
                             file.loc[index, 'False Positive'] = 'no'
@@ -319,6 +327,7 @@ class View(object):
         file.to_csv(arquivoOutput)
         self.ClassifierNaiveBayes(file)
         #self.ClassifierDecicionTree(file)
+        #self.ClassifierKNN(file)
 
 
 root = Tk()
