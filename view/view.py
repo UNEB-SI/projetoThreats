@@ -14,6 +14,7 @@ from xml.etree import ElementTree as et
 from sklearn.metrics import confusion_matrix, accuracy_score
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.linear_model import LogisticRegression
 
 class View(object):
 
@@ -143,6 +144,18 @@ class View(object):
         scaler = preprocessing.StandardScaler()
         previsores = scaler.fit_transform(previsores)
         return previsores, classes
+
+    def ClassifierRegressionLogistic(self, file):
+        previsores, classes = self.padronizarDados(file)
+        previsores_treinamento, previsores_teste, classe_treinamento, classe_teste = \
+            train_test_split(previsores, classes, test_size=0.25, random_state=0)
+
+        classificador = LogisticRegression()
+        classificador.fit(previsores_treinamento, classe_treinamento)
+        previsoes = classificador.predict(previsores_teste)
+
+        self.metricas(classe_teste, previsoes)
+        exit()
 
     def ClassifierKNN(self, file):
         previsores, classes = self.padronizarDados(file)
