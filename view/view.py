@@ -3,6 +3,8 @@ from tkinter import *
 import tkinter as tk
 import pandas as pd
 import os
+
+from matplotlib import style
 from sklearn import preprocessing
 from sklearn.tree import DecisionTreeClassifier, export
 import matplotlib.pyplot as plt
@@ -173,7 +175,7 @@ class View(object):
         previsores, classes = self.padronizarDados(file)
 
         previsores_treinamento, previsores_teste, classe_treinamento, classe_teste = \
-            train_test_split(previsores, classes, test_size=0.25,random_state=0)
+            train_test_split(previsores, classes, test_size=0.25,random_state=1)
         classificador = GaussianNB()
         classificador.fit(previsores_treinamento, classe_treinamento)
         previsoes = classificador.predict(previsores_teste)
@@ -213,7 +215,7 @@ class View(object):
 
     def agruparDados(self, file):
 
-        # style.use("ggplot")
+        style.use("ggplot")
         caminho = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/Ameaças/Novos/trainThreats.csv'
         colors = ['b', 'orange', 'g', 'r', 'c', 'm', 'y', 'k', 'Brown', 'ForestGreen']
         # Data points with their publisher name,category score, category name, place name
@@ -221,28 +223,32 @@ class View(object):
         #severity = np.genfromtxt(caminho, dtype=str, delimiter=',', skip_header=1)[:, 8]  # severidade
         X = np.genfromtxt(caminho, dtype=object, delimiter=',', skip_header=1)[:, 1:]
 
-        kproto = KPrototypes(n_clusters=5, init='Cao', verbose=2)
-        #clusters = kproto.fit_predict(X, categorical=[0, 1, 2, 3, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
-        clusters = kproto.fit_predict(X, categorical=[0, 1, 2, 3, 4, 7, 8, 9, 10, 11, 12, 13,14])
-
-        '''plt.scatter(X[clusters == 0, 8], X[clusters == 0, 9], c='red', alpha=0.8, s=30, label='Cluster 0')
-        plt.scatter(X[clusters == 1, 8], X[clusters == 1, 9], c='orange', alpha=0.8, s=30, label='Cluster 1')
-        plt.scatter(X[clusters == 2, 8], X[clusters == 2, 9], c='green', alpha=0.8, s=30, label='Cluster 2')
-        plt.scatter(X[clusters == 3, 8], X[clusters == 3, 9], c='blue', alpha=0.8, s=30, label='Cluster 3')
-        plt.scatter(X[clusters == 4, 8], X[clusters == 4, 9], c='purple', alpha=0.8, s=30, label='Cluster 4')
-        plt.xlabel('Severidade')
-        plt.ylabel('Categoria')
-        plt.legend()
-        plt.show()'''
+        kproto = KPrototypes(n_clusters=4, init='Cao', verbose=2)
+        clusters = kproto.fit_predict(X, categorical=[0, 1, 2, 3, 4, 7, 8, 9, 10, 11, 12, 13, 14])
 
         file['Clusters'] = clusters
-
 
         # Print cluster centroids of the trained model.
         print(kproto.cluster_centroids_)
         # Print training statistics
         print(kproto.cost_)
         print(kproto.n_iter_)
+        print(kproto.gamma)
+
+        arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/oi.csv'
+        file.to_csv(arquivoOutput)
+
+        plt.scatter(X[clusters == 0, 8], X[clusters == 0, 9], c='purple', alpha=0.5, s=150)
+        plt.scatter(X[clusters == 1, 8], X[clusters == 1, 9], c='black', alpha=0.5, s=150)
+        plt.scatter(X[clusters == 2, 8], X[clusters == 2, 9], c='red', alpha=0.5, s=150)
+        plt.scatter(X[clusters == 3, 8], X[clusters == 3, 9], c='green', alpha=0.5, s=150)
+        '''plt.scatter(X[clusters == 4, 8], X[clusters == 4, 9], c='purple', alpha=0.5, s=100, label='Cluster 4')
+        plt.scatter(X[clusters == 5, 8], X[clusters == 5, 9], c='yellow', alpha=0.5, s=100, label='Cluster 5')'''
+        plt.xlabel('Severity')
+        plt.ylabel('Category')
+        plt.legend()
+        plt.show()
+        exit()
 
         self.lerXML(file)
 
