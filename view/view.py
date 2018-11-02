@@ -57,7 +57,7 @@ class View(object):
 
             df['Receive Time'] = pd.to_datetime(df['Receive Time'])
 
-            for i in range(df['Destination User'].count()):
+            for i in range(df.shape[0]):
                 destino = df['Destination User'][i]
                 origem = df['Source User'][i]
                 enderecoOrigem = df['Source address'][i]
@@ -73,7 +73,8 @@ class View(object):
                     df.loc[i, 'Source address'] = 'any'
 
                 if type(enderecoDestino) == float:
-                    df.loc[i, 'Destination address'] = 'any'
+                    df.loc[i, 'Source address'] = 'any'
+
 
             results = {
                 'Receive Time': df['Receive Time'],
@@ -175,7 +176,7 @@ class View(object):
         previsores, classes = self.padronizarDados(file)
 
         previsores_treinamento, previsores_teste, classe_treinamento, classe_teste = \
-            train_test_split(previsores, classes, test_size=0.25,random_state=1)
+            train_test_split(previsores, classes, test_size=0.25, random_state=1)
         classificador = GaussianNB()
         classificador.fit(previsores_treinamento, classe_treinamento)
         previsoes = classificador.predict(previsores_teste)
@@ -235,20 +236,16 @@ class View(object):
         print(kproto.n_iter_)
         print(kproto.gamma)
 
-        arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/oi.csv'
-        file.to_csv(arquivoOutput)
-
-        plt.scatter(X[clusters == 0, 8], X[clusters == 0, 9], c='purple', alpha=0.5, s=150)
-        plt.scatter(X[clusters == 1, 8], X[clusters == 1, 9], c='black', alpha=0.5, s=150)
-        plt.scatter(X[clusters == 2, 8], X[clusters == 2, 9], c='red', alpha=0.5, s=150)
-        plt.scatter(X[clusters == 3, 8], X[clusters == 3, 9], c='green', alpha=0.5, s=150)
-        '''plt.scatter(X[clusters == 4, 8], X[clusters == 4, 9], c='purple', alpha=0.5, s=100, label='Cluster 4')
-        plt.scatter(X[clusters == 5, 8], X[clusters == 5, 9], c='yellow', alpha=0.5, s=100, label='Cluster 5')'''
+        '''plt.scatter(X[clusters == 0, 8], X[clusters == 0, 9], c='purple', alpha=0.5, s=150,  label='Cluster 0')
+        plt.scatter(X[clusters == 1, 8], X[clusters == 1, 9], c='black', alpha=0.5, s=150,  label='Cluster 1')
+        plt.scatter(X[clusters == 2, 8], X[clusters == 2, 9], c='red', alpha=0.5, s=150,  label='Cluster 2')
+        plt.scatter(X[clusters == 3, 8], X[clusters == 3, 9], c='green', alpha=0.5, s=150,  label='Cluster 3')
+        plt.scatter(X[clusters == 4, 8], X[clusters == 4, 9], c='blue', alpha=0.5, s=100, label='Cluster 4')
+        plt.scatter(X[clusters == 5, 8], X[clusters == 5, 9], c='yellow', alpha=0.5, s=100, label='Cluster 5')
         plt.xlabel('Severity')
         plt.ylabel('Category')
         plt.legend()
-        plt.show()
-        exit()
+        plt.show()'''
 
         self.lerXML(file)
 
@@ -322,6 +319,7 @@ class View(object):
                     regras[i]['service_'].append(node8.text)
 
         tamRegras = len(regras)
+        ports = [19090, 19091, 19092, 19093, 19094, 19095, 19096, 19097, 19098, 19099]
         for index, row in file.iterrows():
             for i in range(tamRegras):
                 if row["Rule"] == regras[i]['name']:
@@ -339,11 +337,16 @@ class View(object):
                             file.loc[index, 'False Positive'] = 'yes' #equivale a sim
                         else:
                             file.loc[index, 'False Positive'] = 'no'
+                        if (row["Destination Port"] in ports) and (row["thr_category"] == "brute-force"):
+                            file.loc[index, 'False Positive'] = 'yes'
+                        else:
+                            file.loc[index, 'False Positive'] = 'no'
                     else:
                         file.loc[index, 'False Positive'] = 'no' #equivale a nao
 
         arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/new.csv'
         file.to_csv(arquivoOutput)
+        exit()
         self.ClassifierNaiveBayes(file)
         #self.ClassifierDecicionTree(file)
         #self.ClassifierKNN(file)
