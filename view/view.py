@@ -13,10 +13,11 @@ import numpy as np
 import graphviz
 from kmodes.kprototypes import KPrototypes
 from xml.etree import ElementTree as et
-from sklearn.metrics import confusion_matrix, accuracy_score
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import StratifiedKFold
+from sklearn.metrics import accuracy_score, confusion_matrix
 
 class View(object):
 
@@ -51,6 +52,12 @@ class View(object):
         print("New File!")
 
     def OpenFile(self):
+        arq = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/new.csv'
+        x = pd.read_csv(arq)
+        #self.ClassifierNaiveBayes(x)
+        #self.ClassifierDecicionTree(x)
+        #self.ClassifierKNN(x)
+        self.ClassifierRegressionLogistic(x)
         nomeArquivo = filedialog.askopenfilename(initialdir="", title="Select file", filetypes=[("all files", ".*")])
         with open(nomeArquivo, 'r', encoding='utf-8') as arquivo:
             df = pd.read_csv(arquivo)
@@ -102,12 +109,13 @@ class View(object):
                                                      'Rule', 'Application', 'Direction'])
 
             stringP.to_csv(arquivoOutput)
-            self.agruparDados(stringP)
+            #self.lerXML(x)
+            #self.agruparDados(stringP)
 
     def About(self):
         print("This is a simple example of a menu")
 
-    def metricas(self, classe_teste, previsoes):
+    def metricas(self, classe_teste, previsoes):#0 no, 1 yes
         precisao = accuracy_score(classe_teste, previsoes)
         matriz = confusion_matrix(classe_teste, previsoes)
 
@@ -117,8 +125,8 @@ class View(object):
     def padronizarDados(self, file):
 
         le = preprocessing.LabelEncoder()
-        previsores = file.iloc[:, 0:16].values
-        classes = file.iloc[:, 16].values
+        previsores = file.iloc[:, 1:17].values #mudar pra zero dps dos testes e 16
+        classes = file.iloc[:, 17].values
         classes = classes.astype(str)
 
         # previsores[:, 0] = le.fit_transform(previsores[:, 0])
@@ -150,54 +158,97 @@ class View(object):
 
     def ClassifierRegressionLogistic(self, file):
         previsores, classes = self.padronizarDados(file)
-        previsores_treinamento, previsores_teste, classe_treinamento, classe_teste = \
-            train_test_split(previsores, classes, test_size=0.25, random_state=0)
+        resultados30 = []
+        for i in range(30):
+            kfold = StratifiedKFold(n_splits=10, shuffle=True, random_state=i)
+            resultados1 = []
+            for indice_treinamento, indice_teste in kfold.split(previsores, np.zeros(shape=(classes.shape[0], 1))):
+                classificador = LogisticRegression()
+                classificador.fit(previsores[indice_treinamento], classes[indice_treinamento])
+                previsoes = classificador.predict(previsores[indice_teste])
+                precisao = accuracy_score(classes[indice_teste], previsoes)
+                resultados1.append(precisao)
 
-        classificador = LogisticRegression()
-        classificador.fit(previsores_treinamento, classe_treinamento)
-        previsoes = classificador.predict(previsores_teste)
+            resultados1 = np.asarray(resultados1)
+            media = resultados1.mean()
+            resultados30.append(media)
 
-        self.metricas(classe_teste, previsoes)
+        resultados30 = np.asarray(resultados30)
+        resultados30.mean()
+        for i in range(resultados30.size):
+            print(str(resultados30[i]).replace('.', ','))
         exit()
 
     def ClassifierKNN(self, file):
         previsores, classes = self.padronizarDados(file)
-        previsores_treinamento, previsores_teste, classe_treinamento, classe_teste = \
-            train_test_split(previsores, classes, test_size=0.25,random_state=0)
+        resultados30 = []
+        for i in range(30):
+            kfold = StratifiedKFold(n_splits=10, shuffle=True, random_state=i)
+            resultados1 = []
+            for indice_treinamento, indice_teste in kfold.split(previsores, np.zeros(shape=(classes.shape[0], 1))):
+                classificador = KNeighborsClassifier(metric='minkowski', p=2)
+                classificador.fit(previsores[indice_treinamento], classes[indice_treinamento])
+                previsoes = classificador.predict(previsores[indice_teste])
+                precisao = accuracy_score(classes[indice_teste], previsoes)
+                resultados1.append(precisao)
 
-        classificador = KNeighborsClassifier(metric='minkowski', p=2)
-        classificador.fit(previsores_treinamento, classe_treinamento)
-        previsoes = classificador.predict(previsores_teste)
+            resultados1 = np.asarray(resultados1)
+            media = resultados1.mean()
+            resultados30.append(media)
 
-        self.metricas(classe_teste, previsoes)
+        resultados30 = np.asarray(resultados30)
+        resultados30.mean()
+        for i in range(resultados30.size):
+            print(str(resultados30[i]).replace('.', ','))
         exit()
 
     def ClassifierNaiveBayes(self, file):
         previsores, classes = self.padronizarDados(file)
+        resultados30 = []
+        for i in range(30):
+            kfold = StratifiedKFold(n_splits=10, shuffle=True, random_state=i)
+            resultados1 = []
+            for indice_treinamento, indice_teste in kfold.split(previsores, np.zeros(shape=(classes.shape[0], 1))):
+                classificador = GaussianNB()
+                classificador.fit(previsores[indice_treinamento], classes[indice_treinamento])
+                previsoes = classificador.predict(previsores[indice_teste])
+                precisao = accuracy_score(classes[indice_teste], previsoes)
+                resultados1.append(precisao)
 
-        previsores_treinamento, previsores_teste, classe_treinamento, classe_teste = \
-            train_test_split(previsores, classes, test_size=0.25, random_state=1)
-        classificador = GaussianNB()
-        classificador.fit(previsores_treinamento, classe_treinamento)
-        previsoes = classificador.predict(previsores_teste)
-        print(classificador.class_prior_)
+            resultados1 = np.asarray(resultados1)
+            media = resultados1.mean()
+            resultados30.append(media)
 
-        self.metricas(classe_teste, previsoes)
+        resultados30 = np.asarray(resultados30)
+        resultados30.mean()
+        for i in range(resultados30.size):
+            print(str(resultados30[i]).replace('.', ','))
         exit()
 
     def ClassifierDecicionTree(self, file):
 
         previsores, classes = self.padronizarDados(file)
-        previsores_treinamento, previsores_teste, classe_treinamento, classe_teste = \
-            train_test_split(previsores,classes, test_size=0.25,random_state=0)
+        resultados30 = []
+        for i in range(30):
+            kfold = StratifiedKFold(n_splits=10, shuffle=True, random_state=i)
+            resultados1 = []
+            for indice_treinamento, indice_teste in kfold.split(previsores, np.zeros(shape=(classes.shape[0], 1))):
+                classificador = DecisionTreeClassifier(criterion='entropy', random_state=0)
+                classificador.fit(previsores[indice_treinamento], classes[indice_treinamento])
+                previsoes = classificador.predict(previsores[indice_teste])
+                precisao = accuracy_score(classes[indice_teste], previsoes)
+                resultados1.append(precisao)
 
-        classificador = DecisionTreeClassifier(criterion="entropy", random_state=0, max_depth=None, min_samples_leaf=5)
-        classificador.fit(previsores_treinamento, classe_treinamento)
-        print(classificador.feature_importances_)
-        previsoes = classificador.predict(previsores_teste)
+            resultados1 = np.asarray(resultados1)
+            media = resultados1.mean()
+            resultados30.append(media)
 
-        self.metricas(classe_teste, previsoes)
-        dot_data = export.export_graphviz(classificador,
+        resultados30 = np.asarray(resultados30)
+        resultados30.mean()
+        for i in range(resultados30.size):
+            print(str(resultados30[i]).replace('.', ','))
+        exit()
+        '''dot_data = export.export_graphviz(classificador,
                                           out_file=None,
                                           feature_names=['Receive Time','Source Address',
                                                          'Destination Address',
@@ -211,7 +262,7 @@ class View(object):
                                           leaves_parallel=True,
                                           special_characters=True)
         graph = graphviz.Source(dot_data)
-        graph.render("file", view=True)
+        graph.render("file", view=True)'''
         exit()
 
     def agruparDados(self, file):
@@ -319,7 +370,6 @@ class View(object):
                     regras[i]['service_'].append(node8.text)
 
         tamRegras = len(regras)
-        ports = [19090, 19091, 19092, 19093, 19094, 19095, 19096, 19097, 19098, 19099]
         for index, row in file.iterrows():
             for i in range(tamRegras):
                 if row["Rule"] == regras[i]['name']:
@@ -337,16 +387,11 @@ class View(object):
                             file.loc[index, 'False Positive'] = 'yes' #equivale a sim
                         else:
                             file.loc[index, 'False Positive'] = 'no'
-                        if (row["Destination Port"] in ports) and (row["thr_category"] == "brute-force"):
-                            file.loc[index, 'False Positive'] = 'yes'
-                        else:
-                            file.loc[index, 'False Positive'] = 'no'
                     else:
                         file.loc[index, 'False Positive'] = 'no' #equivale a nao
 
         arquivoOutput = 'C:/Users/Teste/Desktop/10 semestre/tcc2/Arquivos de Logs/Arquivos de Logs/new.csv'
         file.to_csv(arquivoOutput)
-        exit()
         self.ClassifierNaiveBayes(file)
         #self.ClassifierDecicionTree(file)
         #self.ClassifierKNN(file)
